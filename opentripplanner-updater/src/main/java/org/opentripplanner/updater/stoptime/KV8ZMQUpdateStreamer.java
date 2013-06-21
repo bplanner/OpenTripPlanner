@@ -84,7 +84,7 @@ public class KV8ZMQUpdateStreamer implements UpdateStreamer {
             if (logWriter != null) {
                 logWriter.write(kv8ctx);
             }
-            ret = KV8Update.fromCTX(kv8ctx);
+            ret = KV8Update.fromCTX(defaultAgencyId,kv8ctx);
             count += 1; // if we got here there must not have been an exception
             LOG.debug("decoded gzipped CTX message #{}: {}", count, msg);
             if (count % logFrequency == 0) {

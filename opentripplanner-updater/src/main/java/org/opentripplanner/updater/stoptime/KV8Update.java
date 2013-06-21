@@ -16,6 +16,7 @@ package org.opentripplanner.updater.stoptime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.text.ParseException;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -32,12 +33,12 @@ public class KV8Update extends Update {
         super(tripId, stopId, stopSeq, arrive, depart, status, timestamp, serviceDate);
     }
 
-    public static List<Update> fromCTX(String ctxString) {
+    public static List<Update> fromCTX(String defaultAgencyId,String ctxString) throws ParseException{
         CTX ctx = new CTX(ctxString);
-        return fromCTX(ctx);
+        return fromCTX(defaultAgencyId,ctx);
     }
  
-    public static List<Update> fromCTX(CTX ctx) {
+    public static List<Update> fromCTX(String defaultAgencyId,CTX ctx) throws ParseException{
         //LOG.trace(ctxString);
         // at this point, updates may have mixed trip IDs, dates, etc.
         List<Update> ret = new ArrayList<Update>(); 
@@ -48,14 +49,15 @@ public class KV8Update extends Update {
                 continue;
             int arrival = secondsSinceMidnight(row.get("ExpectedArrivalTime"));
             int departure = secondsSinceMidnight(row.get("ExpectedDepartureTime"));
+            ServiceDate serviceDate = ServiceDate.parseString(row.get("OperationDate").replace("-",""));
             KV8Update u = new KV8Update(
                     kv8TripId(row),   
-                    kv8StopId(row), 
+                    kv8StopId(defaultAgencyId,row), 
                     Integer.parseInt(row.get("UserStopOrderNumber")), 
                     arrival, departure,
                     kv8Status(row),
                     kv8Timestamp(row),
-                    new ServiceDate());
+                    serviceDate);
             ret.add(u);
         }
         return ret;
@@ -93,8 +95,8 @@ public class KV8Update extends Update {
      * internal identifiers for a stop, so should not be used. TimingPointCode is a unique 
      * nationwide (feed-wide) identifier which includes those UserStopCodes.
      */
-    private static AgencyAndId kv8StopId (HashMap<String, String> row) {
-        return new AgencyAndId(null, row.get("TimingPointCode"));
+    private static AgencyAndId kv8StopId (String defaultAgencyId,HashMap<String, String> row) {
+        return new AgencyAndId(defaultAgencyId, row.get("TimingPointCode"));
     }
     
     private static long kv8Timestamp (HashMap<String, String> row) {
