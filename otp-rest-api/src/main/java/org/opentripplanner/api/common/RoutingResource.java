@@ -77,8 +77,12 @@ public abstract class RoutingResource {
     /** Whether the trip must be wheelchair accessible. */
     @DefaultValue("false") @QueryParam("wheelchair") protected List<Boolean> wheelchair;
 
-    /** The maximum distance (in meters) the user is willing to walk. Defaults to approximately 1/2 mile. */
-    @DefaultValue("-1") @QueryParam("maxWalkDistance") protected List<Double> maxWalkDistance;
+    /** The maximum distance (in meters) the user is willing to walk. Defaults to unlimited. */
+    @QueryParam("maxWalkDistance") protected List<Double> maxWalkDistance;
+
+    /** How much worse walking is than waiting for an equivalent length of time, as a multiplier.
+     *  Defaults to 2. */
+    @QueryParam("walkReluctance") protected List<Double> walkReluctance;
 
     /** The user's walking speed in meters/second. Defaults to approximately 3 MPH. */
     @QueryParam("walkSpeed") protected List<Double> walkSpeed;
@@ -175,6 +179,9 @@ public abstract class RoutingResource {
     /** A transit stop required to be the first stop in the search (AgencyId_StopId) */
     @DefaultValue("") @QueryParam("startTransitStopId") protected List<String> startTransitStopId;
 
+    /** A transit trip acting as a starting "state" for depart-onboard routing (AgencyId_TripId) */
+    @DefaultValue("") @QueryParam("startTransitTripId") protected List<String> startTransitTripId;
+
     /**
      * When subtracting initial wait time, do not subtract more than this value, to prevent overly
      * optimistic trips. Reasoning is that it is reasonable to delay a trip start 15 minutes to 
@@ -268,6 +275,7 @@ public abstract class RoutingResource {
         request.setWheelchairAccessible(get(wheelchair, n, request.isWheelchairAccessible()));
         request.setNumItineraries(get(numItineraries, n, request.getNumItineraries()));
         request.setMaxWalkDistance(get(maxWalkDistance, n, request.getMaxWalkDistance()));
+        request.setWalkReluctance(get(walkReluctance, n, request.getWalkReluctance()));
         request.setWalkSpeed(get(walkSpeed, n, request.getWalkSpeed()));
         double bikeSpeedParam = get(bikeSpeed, n, request.getBikeSpeed());
         request.setBikeSpeed(bikeSpeedParam);
@@ -358,6 +366,11 @@ public abstract class RoutingResource {
                 AgencyAndId.convertToString(request.getStartingTransitStopId()));
         if (startTransitStopId != null && !"".equals(startTransitStopId)) {
             request.setStartingTransitStopId(AgencyAndId.convertFromString(startTransitStopId));
+        }
+        String startTransitTripId = get(this.startTransitTripId, n,
+                AgencyAndId.convertToString(request.getStartingTransitTripId()));
+        if (startTransitTripId != null && !"".equals(startTransitTripId)) {
+            request.setStartingTransitTripId(AgencyAndId.convertFromString(startTransitTripId));
         }
         
         request.setClampInitialWait(get(clampInitialWait, n, request.getClampInitialWait()));

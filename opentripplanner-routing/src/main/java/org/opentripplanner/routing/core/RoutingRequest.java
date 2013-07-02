@@ -40,6 +40,7 @@ import org.opentripplanner.routing.request.BannedStopSet;
 import org.opentripplanner.util.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A trip planning request. Some parameters may not be honored by the trip planner for some or all itineraries. For example, maxWalkDistance may be
@@ -90,8 +91,8 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     public boolean intermediatePlacesOrdered;
 
-    /** The maximum distance (in meters) the user is willing to walk. Defaults to 1/2 mile. */
-    public double maxWalkDistance = 800;
+    /** The maximum distance (in meters) the user is willing to walk. Defaults to unlimited. */
+    public double maxWalkDistance = Double.MAX_VALUE;
 
     /** The worst possible time (latest for depart-by and earliest for arrive-by) to accept */
     public long worstTime = Long.MAX_VALUE;
@@ -148,7 +149,8 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public int transferPenalty = 0;
 
-    /** How much worse walking is than waiting for an equivalent length of time, as a multiplier */
+    /** How much worse walking is than waiting for an equivalent length of time, as a multiplier.
+     *  Defaults to 2. */
     public double walkReluctance = 2.0;
 
     /** Used instead of walk reluctance for stairs */
@@ -337,6 +339,9 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** A transit stop that this trip must start from */
     private AgencyAndId startingTransitStopId;
+    
+    /** A trip where this trip must start from (depart-onboard routing) */
+    private AgencyAndId startingTransitTripId;
 
     private boolean walkingBike;
 
@@ -837,7 +842,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && useBikeRentalAvailabilityInformation == other.useBikeRentalAvailabilityInformation
                 && extensions.equals(other.extensions)
                 && clampInitialWait == other.clampInitialWait
-                && reverseOptimizeOnTheFly == other.reverseOptimizeOnTheFly;
+                && reverseOptimizeOnTheFly == other.reverseOptimizeOnTheFly
+                && ObjectUtils.nullSafeEquals(startingTransitTripId, other.startingTransitTripId);
     }
 
     /** Equality and hashCode should not consider the routing context, to allow SPT caching. */
@@ -977,11 +983,16 @@ public class RoutingRequest implements Cloneable, Serializable {
     }
 
     public void setMaxWalkDistance(double maxWalkDistance) {
-        if (maxWalkDistance == 0)
-            return;
-        this.maxWalkDistance = maxWalkDistance;
-        if (bikeWalkingOptions != null && bikeWalkingOptions != this) {
-            this.bikeWalkingOptions.setMaxWalkDistance(maxWalkDistance);
+        if (maxWalkDistance > 0) {
+            this.maxWalkDistance = maxWalkDistance;
+            bikeWalkingOptions.maxWalkDistance = maxWalkDistance;
+        }
+    }
+
+    public void setWalkReluctance(double walkReluctance) {
+        if (walkReluctance > 0) {
+            this.walkReluctance = walkReluctance;
+            // Do not set bikeWalkingOptions.walkReluctance here, because that needs a higher value.
         }
     }
 

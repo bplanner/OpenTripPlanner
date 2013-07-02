@@ -56,9 +56,17 @@ public class TimetableResolver {
     
     /** A set of all timetables which have been modified and are waiting to be indexed. */
     private Set<Timetable> dirty = new HashSet<Timetable>();
-    
+
     /** 
      * Returns an updated timetable for the specified pattern if one is available in this snapshot, 
+     * or the originally scheduled timetable if there are no updates in this snapshot. 
+     */
+    public Timetable resolve(TableTripPattern pattern) {
+        return resolve(pattern,null);
+    }
+
+    /** 
+     * Returns an updated timetable for the specified pattern on the specified servicedate if one is available in this snapshot, 
      * or the originally scheduled timetable if there are no updates in this snapshot. 
      */
     public Timetable resolve(TableTripPattern pattern, ServiceDate serviceDate) {
@@ -66,7 +74,7 @@ public class TimetableResolver {
         
         if(sortedTimetables != null && serviceDate != null) {
             for(Timetable timetable : sortedTimetables) {
-                if (timetable != null && timetable.isValidFor(serviceDate)) {
+                if (timetable != null && ( serviceDate == null || timetable.isValidFor(serviceDate))) {
                     LOG.trace("returning modified timetable");
                     return timetable;
                 }

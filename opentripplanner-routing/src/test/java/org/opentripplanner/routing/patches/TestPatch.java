@@ -216,6 +216,9 @@ public class TestPatch extends TestCase {
                 // TODO Auto-generated method stub
                 
             }
+            public List<PatternHop> getPatternHopsForTrip(AgencyAndId tripId) {
+                return null;
+            }
         };
         graph.putService(TransitIndexService.class, index);
     }

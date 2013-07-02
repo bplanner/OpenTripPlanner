@@ -57,6 +57,8 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
     private HashMap<AgencyAndId, PreAlightEdge> preAlightEdges;
 
     private HashMap<AgencyAndId, PreBoardEdge> preBoardEdges;
+    
+    private HashMap<AgencyAndId, List<PatternHop>> patternHopsByTrip;
 
     private HashMap<AgencyAndId, HashSet<String>> directionsForRoute;
 
@@ -85,6 +87,7 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
             HashMap<AgencyAndId, RouteVariant> variantsByTrip,
             HashMap<AgencyAndId, PreBoardEdge> preBoardEdges,
             HashMap<AgencyAndId, PreAlightEdge> preAlightEdges,
+            HashMap<AgencyAndId, List<PatternHop>> patternHopsByTrip,
             HashMap<AgencyAndId, HashSet<String>> directionsByRoute,
             HashMap<AgencyAndId, HashSet<Stop>> stopsByRoute,
             HashMap<AgencyAndId, TableTripPattern> patternForTrip,
@@ -96,6 +99,7 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
         this.variantsByTrip = variantsByTrip;
         this.preBoardEdges = preBoardEdges;
         this.preAlightEdges = preAlightEdges;
+        this.patternHopsByTrip = patternHopsByTrip;
         this.directionsForRoute = directionsByRoute;
         this.stopsForRoute = stopsByRoute;
         this.patternForTrip = patternForTrip;
@@ -109,6 +113,7 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
             HashMap<AgencyAndId, RouteVariant> variantsByTrip,
             HashMap<AgencyAndId, PreBoardEdge> preBoardEdges,
             HashMap<AgencyAndId, PreAlightEdge> preAlightEdges,
+            HashMap<AgencyAndId, List<PatternHop>> patternHopsByTrip,
             HashMap<AgencyAndId, HashSet<String>> directionsByRoute,
             HashMap<AgencyAndId, HashSet<Stop>> stopsByRoute,
             HashMap<AgencyAndId, TableTripPattern> patternForTrip,
@@ -121,6 +126,7 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
         this.variantsByTrip.putAll(variantsByTrip);
         this.preBoardEdges.putAll(preBoardEdges);
         this.preAlightEdges.putAll(preAlightEdges);
+        this.patternHopsByTrip.putAll(patternHopsByTrip);
         MapUtils.mergeInUnique(this.directionsForRoute, directionsByRoute);
         MapUtils.mergeInUnique(this.stopsForRoute, stopsByRoute);
         this.patternForTrip.putAll(patternForTrip);
@@ -261,6 +267,11 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
     @Override
     public PreAlightEdge getPreAlightEdge(AgencyAndId stop) {
         return preAlightEdges.get(stop);
+    }
+    
+    @Override
+    public List<PatternHop> getPatternHopsForTrip(AgencyAndId tripId) {
+        return patternHopsByTrip.get(tripId);
     }
 
     @Override

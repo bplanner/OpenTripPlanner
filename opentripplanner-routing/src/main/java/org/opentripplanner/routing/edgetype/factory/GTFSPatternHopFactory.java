@@ -29,6 +29,7 @@ import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Frequency;
 import org.onebusaway.gtfs.model.Pathway;
+import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.ShapePoint;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
@@ -55,6 +56,7 @@ import org.opentripplanner.gbannotation.TripUndefinedService;
 import org.opentripplanner.gtfs.GtfsContext;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.core.ServiceIdToNumberService;
+import org.opentripplanner.routing.core.StopTransfer;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.FreeEdge;
@@ -79,9 +81,11 @@ import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.impl.DefaultFareServiceFactory;
+import org.opentripplanner.routing.impl.OnBoardDepartServiceImpl;
 import org.opentripplanner.routing.services.FareService;
 import org.opentripplanner.routing.services.FareServiceFactory;
 import org.opentripplanner.routing.services.TransitIndexService;
+import org.opentripplanner.routing.services.OnBoardDepartService;
 import org.opentripplanner.routing.vertextype.PatternArriveVertex;
 import org.opentripplanner.routing.vertextype.PatternDepartVertex;
 import org.opentripplanner.routing.vertextype.TransitStop;
@@ -558,7 +562,7 @@ public class GTFSPatternHopFactory {
                     interlineDwells.put(dwellKey, dwell);
                 }
                 int dwellTime = st1.getDepartureTime() - st0.getArrivalTime();
-                dwell.addTrip(fromTrip.getId(), toTrip.getId(), dwellTime,
+                dwell.addTrip(fromTrip, toTrip, dwellTime,
                         fromInterlineTrip.getPatternIndex(), toInterlineTrip.getPatternIndex());
             }
         } // END loop over interlining blocks 
@@ -574,6 +578,7 @@ public class GTFSPatternHopFactory {
         clearCachedData();
         graph.putService(FareService.class, fareServiceFactory.makeFareService());
         graph.putService(ServiceIdToNumberService.class, new ServiceIdToNumberService(context.serviceIds));
+        graph.putService(OnBoardDepartService.class, new OnBoardDepartServiceImpl());
     }
     
     public Result addPatternForTripToGraph(Graph graph, Trip trip, List<StopTime> stopTimes) {
@@ -1326,6 +1331,10 @@ public class GTFSPatternHopFactory {
         for (Transfer t : transfers) {
             Stop fromStop = t.getFromStop();
             Stop toStop = t.getToStop();
+            Route fromRoute = t.getFromRoute();
+            Route toRoute = t.getToRoute();
+            Trip fromTrip = t.getFromTrip();
+            Trip toTrip = t.getToTrip();
             Vertex fromVertex = context.stopArriveNodes.get(fromStop);
             Vertex toVertex = context.stopDepartNodes.get(toStop);
             switch (t.getTransferType()) {
@@ -1333,20 +1342,35 @@ public class GTFSPatternHopFactory {
                 // timed (synchronized) transfer 
                 // Handle with edges that bypass the street network.
                 // from and to vertex here are stop_arrive and stop_depart vertices
-                new TimedTransferEdge(fromVertex, toVertex);
+                
+                // only add edge when it doesn't exist already
+                boolean hasTimedTransferEdge = false;
+                for (Edge outgoingEdge : fromVertex.getOutgoing()) {
+                    if (outgoingEdge instanceof TimedTransferEdge) {
+                        if (outgoingEdge.getToVertex() == toVertex) {
+                            hasTimedTransferEdge = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasTimedTransferEdge) {
+                    new TimedTransferEdge(fromVertex, toVertex);
+                }
+                // add to transfer table to handle specificity
+                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.TIMED_TRANSFER);
                 break;
             case 2:
                 // min transfer time
-                transferTable.setTransferTime(fromVertex, toVertex, t.getMinTransferTime());
+                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, t.getMinTransferTime());
                 break;
             case 3:
                 // forbidden transfer
-                transferTable.setTransferTime(fromVertex, toVertex, TransferTable.FORBIDDEN_TRANSFER);
+                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.FORBIDDEN_TRANSFER);
                 break;
             case 0:
             default: 
                 // preferred transfer
-                transferTable.setTransferTime(fromVertex, toVertex, TransferTable.PREFERRED_TRANSFER);
+                transferTable.addTransferTime(fromStop, toStop, fromRoute, toRoute, fromTrip, toTrip, StopTransfer.PREFERRED_TRANSFER);
                 break;
             }
         }

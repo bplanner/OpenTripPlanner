@@ -36,6 +36,7 @@ import org.onebusaway.gtfs.model.ServiceCalendarDate;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.routing.core.TraverseMode;
+import org.opentripplanner.routing.edgetype.PatternHop;
 import org.opentripplanner.routing.edgetype.PreAlightEdge;
 import org.opentripplanner.routing.edgetype.PreBoardEdge;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
@@ -581,6 +582,8 @@ public class GtfsRealtimeAbstractUpdateStreamerTest {
             public void addCalendarDates(Collection<ServiceCalendarDate> allDates) {}
             @Override
             public void add(Result result) {}
+			@Override
+			public List<PatternHop> getPatternHopsForTrip(AgencyAndId tripId) {return null;}
        });
     }
 }
