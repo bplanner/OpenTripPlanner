@@ -764,7 +764,7 @@ public class TransitResponseBuilder {
             if(incomingRoutes.isEmpty() || incoming) {
                 return "OTHER";
             } else {
-                return getStopColorTypeForStop(transitStop, incomingRoutes, incoming);
+                return getStopColorTypeForStop(transitStop, incomingRoutes, true);
             }
         }
 
