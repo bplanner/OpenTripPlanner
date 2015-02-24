@@ -45,7 +45,7 @@ public class OneBusAwayRequestLogger {
 
     private static String EMPTY = "(empty)";
     private static int counter = 1;
-    private static int QUEUE_LIMIT = 10000;
+    private static int QUEUE_LIMIT = 5000;
     private static int THREADS = 8;
 
     private static GoogleAnalytics ga = new OBAGoogleAnalytics("UA-50283889-5");
