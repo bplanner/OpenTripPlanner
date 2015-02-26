@@ -23,9 +23,7 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.TransitScheduleStopTime;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitTrip;
 import org.opentripplanner.routing.core.RoutingRequest;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,12 +35,6 @@ import java.util.Set;
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "arrivals-and-departures-for-stop" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDeparturesOTPMethod<TransitEntryWithReferences<TransitArrivalsAndDepartures>> {
     
-    @QueryParam("minutesBefore") @DefaultValue("2") private int minutesBefore;
-    @QueryParam("minutesAfter") @DefaultValue("30") private int minutesAfter;
-    @QueryParam("stopId") private List<String> stopIdStrings;
-    @QueryParam("time") private Long time;
-	@QueryParam("onlyDepartures") @DefaultValue("true") private boolean onlyDepartures;
-
     @Override
     protected TransitResponse<TransitEntryWithReferences<TransitArrivalsAndDepartures>> getResponse() {
 
@@ -78,7 +70,7 @@ public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDe
 
         RoutingRequest options = makeTraverseOptions(startTime, routerId);
 
-        getResponse(stops, single, stopTimes, trips);
+        boolean limitExceeded = getResponse(stops, single, stopTimes, trips);
 
         for(Stop stop : stops) {
             if(single)
@@ -87,6 +79,6 @@ public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDe
             alertIds.addAll(getAlertsForStop(stop.getId(), options, startTime, endTime));
         }
 
-        return responseBuilder.getResponseForStop(stops.get(0), stopTimes, new ArrayList<String>(alertIds), new ArrayList<TransitTrip>(trips), new ArrayList<String>(nearbyStopIds));
+        return responseBuilder.getResponseForStop(stops.get(0), limitExceeded, stopTimes, new ArrayList<String>(alertIds), new ArrayList<TransitTrip>(trips), new ArrayList<String>(nearbyStopIds));
     }
 }

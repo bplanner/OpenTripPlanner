@@ -41,8 +41,9 @@ public class TransitListEntryWithReferences<B> {
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private TransitReferences references;
 
-    public TransitListEntryWithReferences(List<B> list, TransitReferences references) {
+    public TransitListEntryWithReferences(boolean limitExceeded, List<B> list, TransitReferences references) {
 	    this.klass = "listWithReferences";
+        this.limitExceeded = limitExceeded;
         this.list = list;
         this.references = references;
     }

@@ -35,13 +35,15 @@ public class TransitEntryWithReferences<B> {
     @JsonProperty("class")
     @XmlAttribute(name = "class")
     private String klass;
+    private boolean limitExceeded;
     private B entry;
-    
+
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private TransitReferences references;
 
-    public TransitEntryWithReferences(B entry, TransitReferences references) {
+    public TransitEntryWithReferences(boolean limitExceeded, B entry, TransitReferences references) {
         this.klass = "entryWithReferences";
+        this.limitExceeded = limitExceeded;
         this.entry = entry;
         this.references = references;
     }

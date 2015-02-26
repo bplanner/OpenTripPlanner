@@ -121,7 +121,7 @@ public class TransitResponseBuilder {
         for(TransitAgencyWithCoverage agencyWithCoverage : agenciesWithCoverage) {
             addToReferences(_transitIndexService.getAgency(agencyWithCoverage.getAgencyId()));
         }
-        return getOkResponse(list(agenciesWithCoverage));
+        return getOkResponse(list(false, agenciesWithCoverage));
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitAgency>> getResponseForAgency(Agency agency) {
@@ -137,11 +137,11 @@ public class TransitResponseBuilder {
     }
 
 	public TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponseForRoutes(List<Route> routes) {
-		return getOkResponse(list(getRoutes(routes)));
+		return getOkResponse(list(false, getRoutes(routes)));
 	}
 
     public TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponseForTransitRoutes(List<TransitRoute> transitRoutes) {
-        return getOkResponse(list(transitRoutes));
+        return getOkResponse(list(false, transitRoutes));
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitRouteDetails>> getResponseForRoute(Route route, List<RouteVariant> variants, List<RouteVariant> relatedVariants, List<String> alertIds) {
@@ -172,10 +172,10 @@ public class TransitResponseBuilder {
         return getOkResponse(entity(getStop(stop)));
     }
 
-    public TransitResponse<TransitEntryWithReferences<TransitArrivalsAndDepartures>> getResponseForStop(Stop stop, List<TransitScheduleStopTime> stopTimes,
-            List<String> alertIds, List<TransitTrip> trips, List<String> nearbyStopIds) {
+    public TransitResponse<TransitEntryWithReferences<TransitArrivalsAndDepartures>> getResponseForStop(Stop stop, boolean limitExceeded,
+            List<TransitScheduleStopTime> stopTimes, List<String> alertIds, List<TransitTrip> trips, List<String> nearbyStopIds) {
 
-        return getOkResponse(entity(getArrivalsAndDepartures(stop, stopTimes, alertIds, trips, nearbyStopIds)));
+        return getOkResponse(entity(limitExceeded, getArrivalsAndDepartures(stop, stopTimes, alertIds, trips, nearbyStopIds)));
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitStopWithArrivalsAndDepartures>> getResponseForStop(Stop stop,
@@ -196,7 +196,7 @@ public class TransitResponseBuilder {
             
             transitStops.add(transitStop);
         }
-        return getOkResponse(list(transitStops));
+        return getOkResponse(list(false, transitStops));
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitSchedule>> getResponseForStopSchedule(Stop stop, TransitSchedule schedule) {
@@ -229,7 +229,11 @@ public class TransitResponseBuilder {
     }
 
     public <B> TransitResponse<TransitListEntryWithReferences<B>> getResponseForList(List<B> list) {
-        return getOkResponse(list(list));
+        return getOkResponse(list(false, list));
+    }
+
+    public <B> TransitResponse<TransitListEntryWithReferences<B>> getResponseForList(boolean limitExceeded, List<B> list) {
+        return getOkResponse(list(limitExceeded, list));
     }
 
     private <T> TransitResponse<T> getOkResponse(T data) {
@@ -943,19 +947,23 @@ public class TransitResponseBuilder {
     }
     
     /* HELPERS */
-    
+
     public <B> TransitEntryWithReferences<B> entity(B entry) {
+        return entity(false, entry);
+    }
+
+    public <B> TransitEntryWithReferences<B> entity(boolean limitExceeded, B entry) {
         if(_returnReferences.isEmpty())
-            return new TransitEntryWithReferences<B>(entry, null);
+            return new TransitEntryWithReferences<B>(limitExceeded, entry, null);
         else
-            return new TransitEntryWithReferences<B>(entry, getDialectReferences());
+            return new TransitEntryWithReferences<B>(limitExceeded, entry, getDialectReferences());
     }
     
-    public <B> TransitListEntryWithReferences<B> list(List<B> entry) {
+    public <B> TransitListEntryWithReferences<B> list(boolean limitExceeded, List<B> entry) {
         if(_returnReferences.isEmpty())
-            return new TransitListEntryWithReferences<B>(entry, null);
+            return new TransitListEntryWithReferences<B>(limitExceeded, entry, null);
         else
-            return new TransitListEntryWithReferences<B>(entry, getDialectReferences());
+            return new TransitListEntryWithReferences<B>(limitExceeded, entry, getDialectReferences());
     }
     
     private TransitReferences getDialectReferences() {

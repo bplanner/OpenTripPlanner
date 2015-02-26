@@ -75,7 +75,7 @@ public class ScheduleForStopOTPMethod extends OneBusAwayApiMethod<TransitEntryWi
         
         Map<String, TransitRouteSchedule> scheduleByRoute = new HashMap<String, TransitRouteSchedule>();
         if(options != null) {
-            List<T2<TransitScheduleStopTime, TransitTrip>> stopTimesWithTrips = getStopTimesForStop(startTime, endTime, stopId, onlyDepartures, false);
+            List<T2<TransitScheduleStopTime, TransitTrip>> stopTimesWithTrips = getStopTimesForStop(startTime, endTime, stopId, onlyDepartures, false, -1);
 
             Map<T2<String, String>, List<TransitScheduleStopTime>> stopTimesByRoute = new HashMap<T2<String, String>, List<TransitScheduleStopTime>>();
             for(T2<TransitScheduleStopTime, TransitTrip> stopTimeWithTrip : stopTimesWithTrips) {

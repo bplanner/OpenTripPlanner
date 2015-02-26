@@ -42,12 +42,12 @@ public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsA
         List<TransitScheduleStopTime> stopTimes = new LinkedList<TransitScheduleStopTime>();
         Set<TransitTrip> trips = new HashSet<TransitTrip>();
 
-        getResponse(stops, false, stopTimes, trips);
+        boolean limitExceeded = getResponse(stops, false, stopTimes, trips);
 
         for(TransitTrip trip : trips) {
             responseBuilder.addToReferences(trip);
         }
 
-        return responseBuilder.getResponseForList(stopTimes);
+        return responseBuilder.getResponseForList(limitExceeded, stopTimes);
     }
 }

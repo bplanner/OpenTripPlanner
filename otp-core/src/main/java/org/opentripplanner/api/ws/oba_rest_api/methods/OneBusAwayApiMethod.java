@@ -633,7 +633,7 @@ public abstract class OneBusAwayApiMethod<T> {
     }
     
     protected List<TransitArrivalAndDeparture> getArrivalsAndDeparturesForStop(long startTime, long endTime, AgencyAndId stopId) {
-        List<T2<TransitScheduleStopTime, TransitTrip>> stopTimesWithTrips = getStopTimesForStop(startTime, endTime, stopId, false, true);
+        List<T2<TransitScheduleStopTime, TransitTrip>> stopTimesWithTrips = getStopTimesForStop(startTime, endTime, stopId, false, true, -1);
         sortStopTimesWithTrips(stopTimesWithTrips);
         
         List<TransitArrivalAndDeparture> arrivalsAndDepartures = new LinkedList<TransitArrivalAndDeparture>();
@@ -683,14 +683,14 @@ public abstract class OneBusAwayApiMethod<T> {
     }
 
     protected List<T2<TransitScheduleStopTime, TransitTrip>> getStopTimesForStop(
-            long startTime, long endTime, AgencyAndId stopId, boolean onlyDepartures, boolean keepStopIds) {
+            long startTime, long endTime, AgencyAndId stopId, boolean onlyDepartures, boolean keepStopIds, int limit) {
 
         PreAlightEdge preAlightEdge = transitIndexService.getPreAlightEdge(stopId);
         PreBoardEdge preBoardEdge = transitIndexService.getPreBoardEdge(stopId);
 
         if(preAlightEdge != null && preBoardEdge != null) {
-            List<T2<TransitScheduleStopTime, TransitTrip>> alightingTimes = getStopTimesForPreAlightEdge(stopId.toString(), startTime, endTime, preAlightEdge);
-            List<T2<TransitScheduleStopTime, TransitTrip>> boardingTimes = getStopTimesForPreBoardEdge(stopId.toString(), startTime, endTime, preBoardEdge);
+            List<T2<TransitScheduleStopTime, TransitTrip>> alightingTimes = getStopTimesForPreAlightEdge(stopId.toString(), startTime, endTime, preAlightEdge, limit);
+            List<T2<TransitScheduleStopTime, TransitTrip>> boardingTimes = getStopTimesForPreBoardEdge(stopId.toString(), startTime, endTime, preBoardEdge, limit);
 
             return mergeStopTimes(boardingTimes, alightingTimes, onlyDepartures, keepStopIds);
         } else {
@@ -734,7 +734,7 @@ public abstract class OneBusAwayApiMethod<T> {
     }
 
     protected List<T2<TransitScheduleStopTime, TransitTrip>> getStopTimesForPreAlightEdge(String stopId, long startTime, long endTime,
-            PreAlightEdge edge) {
+                                                                                          PreAlightEdge edge, int limit) {
 
         RoutingRequest options = makeTraverseOptions(startTime, routerId);
         options.setArriveBy(true);
@@ -744,14 +744,14 @@ public abstract class OneBusAwayApiMethod<T> {
             if(!(e instanceof TransitBoardAlight))
                 continue;
             
-            result.addAll(getStopTimesFromTransitBoardAlightEdge(stopId, startTime, endTime, options, (TransitBoardAlight) e));
+            result.addAll(getStopTimesFromTransitBoardAlightEdge(stopId, startTime, endTime, options, (TransitBoardAlight) e, limit));
         }
         
         return result;
     }
     
     protected List<T2<TransitScheduleStopTime, TransitTrip>> getStopTimesForPreBoardEdge(String stopId, long startTime, long endTime,
-            PreBoardEdge edge) {
+                                                                                         PreBoardEdge edge, int limit) {
 
         RoutingRequest options = makeTraverseOptions(startTime, routerId);
         options.setArriveBy(false);
@@ -761,14 +761,14 @@ public abstract class OneBusAwayApiMethod<T> {
             if(!(e instanceof TransitBoardAlight))
                 continue;
             
-            result.addAll(getStopTimesFromTransitBoardAlightEdge(stopId, startTime, endTime, options, (TransitBoardAlight) e));
+            result.addAll(getStopTimesFromTransitBoardAlightEdge(stopId, startTime, endTime, options, (TransitBoardAlight) e, limit));
         }
         
         return result;
     }
 
     protected List<T2<TransitScheduleStopTime, TransitTrip>> getStopTimesFromTransitBoardAlightEdge(String stopId, long startTime, long endTime,
-            RoutingRequest options, TransitBoardAlight tba) {
+            RoutingRequest options, TransitBoardAlight tba, int limit) {
         
         List<T2<TransitScheduleStopTime, TransitTrip>> out = new ArrayList<T2<TransitScheduleStopTime, TransitTrip>>();
         
@@ -783,7 +783,7 @@ public abstract class OneBusAwayApiMethod<T> {
             if (result == null)
                 break;
             time = result.getTimeSeconds();
-            if (time > endTime || time < startTime)
+            if (time > endTime || time < startTime || (limit > 0 && out.size() > limit))
                 break;
 
             long midnight = result.getServiceDay().time(0);
