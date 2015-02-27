@@ -20,6 +20,7 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferen
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitVehicle;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.updater.vehicle_location.VehicleLocationService;
 
 import javax.ws.rs.DefaultValue;
@@ -73,6 +74,10 @@ public class VehicleForTripMethod extends OneBusAwayApiMethod<TransitListEntryWi
 			if(trip == null) {
 				return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown trip.");
 			}
+
+            if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown trip.");
+            }
 
 			TransitVehicle transitVehicle = getTransitVehicleForTrip(vehicleLocationService, tripId, serviceDate);
 			if(transitVehicle != null)

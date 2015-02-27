@@ -239,6 +239,7 @@ public class PlanTripMethod extends RoutingResource {
         try {
             // fill in request from query parameters via shared superclass method
             request = super.buildRequest();
+            request.internalRequest = internalRequest;
             TripPlan plan = func.call(request);
             response.setPlan(plan);
         } catch (Exception e) {

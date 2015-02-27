@@ -230,6 +230,7 @@ public class GtfsGraphBuilderImpl implements GraphBuilder {
 
         GtfsReader reader = new GtfsReader();
         reader.setInputSource(gtfsBundle.getCsvInputSource());
+        reader.setEntitySchemaFactory(GtfsLibrary.createEntitySchemaFactory());
         reader.setEntityStore(store);
 
         reader.setInternStrings(true);

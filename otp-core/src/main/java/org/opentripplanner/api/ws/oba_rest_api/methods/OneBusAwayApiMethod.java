@@ -37,6 +37,7 @@ import org.opentripplanner.api.ws.oba_rest_api.OneBusAwayRequestLogger;
 import org.opentripplanner.api.ws.oba_rest_api.beans.*;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.model.T2;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
@@ -620,7 +621,7 @@ public abstract class OneBusAwayApiMethod<T> {
                     stopTime.setArrivalTime(time + scheduledTripTimes.getArrivalTime(i - 1));
             }
 
-            if(TransitResponseBuilder.isStopPrivate(stop)) {
+            if(GtfsLibrary.isAgencyInternal(stop)) {
                 continue;
             }
 
@@ -791,6 +792,11 @@ public abstract class OneBusAwayApiMethod<T> {
             TripTimes scheduledTripTimes = tripTimes.getScheduledTripTimes();
             
             Trip trip = result.getBackTrip();
+            if(!internalRequest && GtfsLibrary.isAgencyInternal(trip)) {
+                time += options.isArriveBy() ? -1 : +1; // move to the next board time
+                continue;
+            }
+
             TransitTrip transitTrip = responseBuilder.getTrip(trip);
             transitTrip.setWheelchairAccessible(tripTimes.isWheelchairAccessible());
             
@@ -842,7 +848,11 @@ public abstract class OneBusAwayApiMethod<T> {
                 Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
                 TableTripPattern pattern = transitIndexService.getTripPatternForTrip(trip.getId(), vehicle.getServiceDate());
 
-                if(pattern != null) {
+                if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
+                    continue;
+                }
+
+                if(pattern != null && (internalRequest || !GtfsLibrary.isAgencyInternal(trip))) {
                     Timetable timetable = getTimetable(pattern, vehicle.getServiceDate());
 
                     if(timetable != null) {
@@ -1041,6 +1051,7 @@ public abstract class OneBusAwayApiMethod<T> {
         options.setFromString(it.next().getLabel());
         options.setToString(it.next().getLabel());
         options.setRoutingContext(graph);
+        options.internalRequest = isInternalRequest();
         return options;
     }
 

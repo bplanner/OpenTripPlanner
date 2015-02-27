@@ -20,6 +20,7 @@ import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.api.common.SearchHintService;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.services.StreetVertexIndexService;
 
 import javax.ws.rs.DefaultValue;
@@ -106,7 +107,7 @@ public abstract class AbstractLocationSearchMethod<T> extends AbstractSearchMeth
 
         List<Stop> filteredStops = new ArrayList<Stop>();
         for(Stop stop : stops) {
-            if(TransitResponseBuilder.isStopPrivate(stop))
+            if(GtfsLibrary.isAgencyInternal(stop))
                 continue;
 
             filteredStops.add(stop);

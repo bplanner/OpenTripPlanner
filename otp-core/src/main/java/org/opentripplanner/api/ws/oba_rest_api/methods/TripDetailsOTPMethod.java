@@ -24,6 +24,7 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.TransitStopTime;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitTrip;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitTripDetailsOTP;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitVehicle;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
@@ -79,6 +80,9 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
         }
             
         Trip trip = getTrip(tripId, serviceDate);
+        if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.");
+        }
         
         CalendarService calendarService = graph.getCalendarService();
         ServiceDay serviceDay = new ServiceDay(graph, serviceDate, calendarService, trip.getId().getAgencyId());

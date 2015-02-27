@@ -21,6 +21,7 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.TransitEntryWithReferences;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitRouteDetails;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.transit_index.RouteVariant;
 
@@ -49,7 +50,11 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
         if(route == null) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.");
         }
-        
+
+        if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(route)) {
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.");
+        }
+
         ServiceDate serviceDate = new ServiceDate();
         if(date != null) {
             try {

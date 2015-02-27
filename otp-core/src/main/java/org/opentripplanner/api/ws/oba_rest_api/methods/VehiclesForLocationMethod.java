@@ -16,10 +16,12 @@ package org.opentripplanner.api.ws.oba_rest_api.methods;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import org.apache.http.util.TextUtils;
+import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferences;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitVehicle;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.updater.vehicle_location.VehicleLocation;
 import org.opentripplanner.updater.vehicle_location.VehicleLocationService;
 
@@ -85,7 +87,10 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
             }
 
             if(vehicle.getTripId() != null) {
-                responseBuilder.addToReferences(getTrip(vehicle.getTripId(), vehicle.getServiceDate()));
+                Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
+                if(isInternalRequest() || !GtfsLibrary.isAgencyInternal(trip)) {
+                    responseBuilder.addToReferences(getTrip(vehicle.getTripId(), vehicle.getServiceDate()));
+                }
             }
             transitVehicles.add(responseBuilder.getVehicle(vehicle));
         }

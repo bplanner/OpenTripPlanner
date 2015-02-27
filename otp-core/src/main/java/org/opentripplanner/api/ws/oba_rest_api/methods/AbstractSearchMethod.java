@@ -23,6 +23,7 @@ import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
 import org.opentripplanner.api.common.SearchHintService;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.patch.Alert;
 import org.opentripplanner.routing.patch.Patch;
 import org.opentripplanner.routing.services.PatchService;
@@ -48,6 +49,9 @@ public abstract class AbstractSearchMethod<T> extends OneBusAwayApiMethod<T> {
             public boolean apply(Route route) {
                 boolean matched = false;
                 String routeShortName = route.getShortName() != null ? route.getShortName().toLowerCase() : null;
+
+                if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(route))
+                    return false;
                 
                 if(routeShortName != null
                         && routeShortName.matches("" + query + "(\\D.*|)$")) {

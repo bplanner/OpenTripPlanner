@@ -14,12 +14,21 @@
 package org.opentripplanner.gtfs;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.onebusaway.csv_entities.schema.DefaultEntitySchemaFactory;
+import org.onebusaway.csv_entities.schema.EntitySchemaFactory;
+import org.onebusaway.csv_entities.schema.annotations.CsvField;
 import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.impl.calendar.CalendarServiceDataFactoryImpl;
 import org.onebusaway.gtfs.impl.calendar.CalendarServiceImpl;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
+import org.onebusaway.gtfs.model.Stop;
+import org.onebusaway.gtfs.model.Trip;
 import org.onebusaway.gtfs.model.calendar.CalendarServiceData;
+import org.onebusaway.gtfs.serialization.GtfsEntitySchemaFactory;
 import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.gtfs.services.GtfsRelationalDao;
 import org.onebusaway.gtfs.services.calendar.CalendarService;
@@ -27,6 +36,7 @@ import org.opentripplanner.routing.core.TraverseMode;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
 public class GtfsLibrary {
 
@@ -52,6 +62,7 @@ public class GtfsLibrary {
         GtfsReader reader = new GtfsReader();
         reader.setInputLocation(path);
         reader.setEntityStore(dao);
+        reader.setEntitySchemaFactory(createEntitySchemaFactory());
 
         if (defaultAgencyId != null)
             reader.setDefaultAgencyId(defaultAgencyId);
@@ -171,5 +182,44 @@ public class GtfsLibrary {
         public CalendarService getCalendarService() {
             return _calendar;
         }
+    }
+
+    public static EntitySchemaFactory createEntitySchemaFactory() {
+        DefaultEntitySchemaFactory entitySchemaFactory = GtfsEntitySchemaFactory.createEntitySchemaFactory();
+        entitySchemaFactory.addExtension(Route.class, RouteExtension.class);
+        entitySchemaFactory.addExtension(Trip.class, TripExtension.class);
+        return entitySchemaFactory;
+    }
+
+    public static boolean isAgencyInternal(Stop stop) {
+        return stop.getLocationType() == -1;
+    }
+
+    public static boolean isAgencyInternal(Route route) {
+        RouteExtension routeExtension = route.getExtension(RouteExtension.class);
+        return routeExtension != null && "N".equals(routeExtension.getBkkUtas());
+    }
+
+    public static boolean isAgencyInternal(Trip trip) {
+        TripExtension tripExtension = trip.getExtension(TripExtension.class);
+        return tripExtension != null && "N".equals(tripExtension.getBkkUtas());
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RouteExtension implements Serializable {
+
+        @CsvField(optional = true)
+        private String bkkUtas;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TripExtension implements Serializable {
+
+        @CsvField(optional = true, name = "trips_bkk_utas")
+        private String bkkUtas;
     }
 }

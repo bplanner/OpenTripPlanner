@@ -33,6 +33,7 @@ import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
@@ -337,6 +338,8 @@ public class RoutingRequest implements Cloneable, Serializable {
      * distance path service.
      */
     public boolean disableRemainingWeightHeuristic = false;
+
+    public boolean internalRequest = false;
 
     /**
      * The routing context used to actually carry out this search. It is important to build States from TraverseOptions rather than RoutingContexts,
@@ -887,7 +890,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && reverseOptimizeOnTheFly == other.reverseOptimizeOnTheFly
                 && ignoreRealtimeUpdates == other.ignoreRealtimeUpdates
                 && disableRemainingWeightHeuristic == other.disableRemainingWeightHeuristic
-                && ObjectUtils.nullSafeEquals(startingTransitTripId, other.startingTransitTripId);
+                && ObjectUtils.nullSafeEquals(startingTransitTripId, other.startingTransitTripId)
+                && internalRequest == other.internalRequest;
     }
 
     /**
@@ -913,7 +917,8 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Long(clampInitialWait).hashCode() * 209477
                 + new Boolean(reverseOptimizeOnTheFly).hashCode() * 95112799
                 + new Boolean(ignoreRealtimeUpdates).hashCode() * 154329
-                + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939;
+                + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939
+                + new Boolean(internalRequest).hashCode();
         if (batch) {
             hashCode *= -1;
             // batch mode, only one of two endpoints matters
@@ -1073,6 +1078,9 @@ public class RoutingRequest implements Cloneable, Serializable {
                 return true;
             }
         }
+
+        if(!internalRequest && GtfsLibrary.isAgencyInternal(trip))
+            return true;
 
         return false;
     }

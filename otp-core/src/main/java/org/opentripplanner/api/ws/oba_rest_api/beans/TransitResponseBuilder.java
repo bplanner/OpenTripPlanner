@@ -266,7 +266,7 @@ public class TransitResponseBuilder {
     public TransitRouteVariant getTransitVariant(RouteVariant variant) {
         List<String> stopIds = new ArrayList<String>(variant.getStops().size());
         for(Stop stop : variant.getStops()) {
-            if(isStopPrivate(stop))
+            if(GtfsLibrary.isAgencyInternal(stop))
                 continue;
 
             addToReferences(stop);
@@ -368,15 +368,24 @@ public class TransitResponseBuilder {
 			    transitVehicle.setVehicleRouteType(TraverseMode.BUS);
 		    }
 	    }
-        
+
         if(vehicle.getRouteId() != null) {
             Route route = _transitIndexService.getAllRoutes().get(vehicle.getRouteId());
-            if(route != null) {
+            if(_internalRequest || !GtfsLibrary.isAgencyInternal(route)) {
                 transitVehicle.setRouteId(route.getId().toString());
                 addToReferences(route);
             }
         }
-        
+
+        if(vehicle.getTripId() != null) {
+            Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
+            if(_internalRequest || !GtfsLibrary.isAgencyInternal(trip)) {
+                transitVehicle.setTripId(vehicle.getTripId().toString());
+            } else {
+                transitVehicle.setRouteId(null);
+            }
+        }
+
         if(vehicle.getStopId() != null) {
             Stop stop = _transitIndexService.getAllStops().get(vehicle.getStopId());
             if(stop != null) {
@@ -384,10 +393,7 @@ public class TransitResponseBuilder {
                 addToReferences(stop);
             }
         }
-        
-        if(vehicle.getTripId() != null)
-            transitVehicle.setTripId(vehicle.getTripId().toString());
-        
+
         return transitVehicle;
     }
 
@@ -1110,6 +1116,11 @@ public class TransitResponseBuilder {
         return new ArrayList<AgencyAndId>(out);
     }
 
+    protected Trip getTrip(AgencyAndId tripId, ServiceDate serviceDate) {
+        TableTripPattern pattern = _transitIndexService.getTripPatternForTrip(tripId, serviceDate);
+        return pattern != null ? pattern.getTrip(tripId) : null;
+    }
+
     private boolean isOperationalReferenceTrip(Trip trip) {
         return trip.getId().getId().startsWith("REF_");
     }
@@ -1153,10 +1164,6 @@ public class TransitResponseBuilder {
             default:
                 return "?";
         }
-    }
-
-    public static boolean isStopPrivate(Stop stop) {
-        return stop.getLocationType() < 0;
     }
 
     public final static RouteVariantComparator ROUTE_VARIANT_COMPARATOR = new RouteVariantComparator();

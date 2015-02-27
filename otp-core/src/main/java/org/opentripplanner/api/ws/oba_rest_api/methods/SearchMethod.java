@@ -41,15 +41,15 @@ public class SearchMethod extends AbstractSearchMethod<TransitEntryWithReference
             return responseBuilder.getResponseForSearch(query,
 					Collections.<String>emptyList(), Collections.<String>emptyList(), Collections.<String>emptyList());
         }
-        
+
         Iterable<Stop>   allStops = transitIndexService.getAllStops().values();
         Iterable<Route> allRoutes = transitIndexService.getAllRoutes().values();
-        
+
         String normalizedQuery = normalize(query);
         List<Stop>   stops     = getMatchingStopsAndStations(allStops, normalizedQuery);
         List<Route>  routes    = getMatchingRoutes(allRoutes, normalizedQuery, searchHintService);
         List<String> alertIds  = getMatchingAlerts(patchService, stops, routes);
-        
+
         List<String> stopIds = null;
         if(stops != null) {
             stopIds = new ArrayList<String>(stops.size());
