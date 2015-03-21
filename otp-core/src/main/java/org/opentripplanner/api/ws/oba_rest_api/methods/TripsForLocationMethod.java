@@ -75,11 +75,14 @@ public class TripsForLocationMethod extends OneBusAwayApiMethod<TransitListEntry
         
         List<TransitTripDetails> tripDetails = new ArrayList<TransitTripDetails>(vehicles.size());
         for(VehicleLocation vehicle : vehicles) {
-            TransitTripDetails tripDetail = getTripDetails(vehicle.getTripId(), vehicle.getServiceDate(),
-                    includeStatus, includeSchedules, includeTrips);
-            
-            if(tripDetail != null) {
-                tripDetails.add(tripDetail);
+            AgencyAndId tripId = vehicle.getTripId();
+            if (tripId != null) {
+                TransitTripDetails tripDetail = getTripDetails(tripId, vehicle.getServiceDate(),
+                        includeStatus, includeSchedules, includeTrips);
+                
+                if(tripDetail != null) {
+                    tripDetails.add(tripDetail);
+                }
             }
         }
         
