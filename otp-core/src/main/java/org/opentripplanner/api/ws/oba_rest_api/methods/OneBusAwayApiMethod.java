@@ -221,17 +221,17 @@ public abstract class OneBusAwayApiMethod<T> {
     private final TimetableResolver timetableResolver = _getTimetableResolver();
     
     @GET
-    public TransitResponse<T> processResponse() {
+    public javax.ws.rs.core.Response processResponse() {
         OneBusAwayRequestLogger.LogRequest logRequest = requestLogger.startRequest(this, httpContext, uriInfo.getRequestUri(), clientId, apiKey, appVersion, internalRequest, dialect);
 
         graph = getGraph(routerId);
         if(graph == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH);
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH));
         }
         
         transitIndexService = graph.getService(TransitIndexService.class);
         if (transitIndexService == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE);
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE));
         }
         
         cacheService = graph.getService(OneBusAwayApiCacheService.class);
@@ -267,7 +267,7 @@ public abstract class OneBusAwayApiMethod<T> {
             response = Response.serverError();
         }*/
 
-        return transitResponse;
+        return TransitResponseBuilder.getWsResponse(transitResponse);
     }
 
     abstract protected TransitResponse<T> getResponse();

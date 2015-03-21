@@ -84,6 +84,8 @@ public class Raptor implements PathService {
 
     @PostConstruct
     public void setup() {
+        shortPathService.setFirstPathTimeout(10.0);
+        shortPathService.setMultiPathTimeout(5.0);
         shortPathService.setGraphService(graphService);
         shortPathService.setSptService(sptService);
     }

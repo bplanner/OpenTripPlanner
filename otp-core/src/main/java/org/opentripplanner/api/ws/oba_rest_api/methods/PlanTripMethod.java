@@ -99,18 +99,18 @@ public class PlanTripMethod extends RoutingResource {
     @Context private HttpContext httpContext;
 
     @GET
-    public TransitResponse<TransitEntryWithReferences<Response>> plan() {
+    public javax.ws.rs.core.Response plan() {
 	    OneBusAwayRequestLogger.LogRequest logRequest
             = requestLogger.startRequest(this, httpContext, uriInfo.getRequestUri(), clientId, apiKey, appVersion, internalRequest, dialect);
 
         Graph graph = getGraph(routerId);
         if(graph == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH);
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH));
         }
 
         TransitIndexService transitIndexService = graph.getService(TransitIndexService.class);
         if (transitIndexService == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE);
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE));
         }
         
         OneBusAwayApiCacheService cacheService = graph.getService(OneBusAwayApiCacheService.class);
@@ -152,9 +152,9 @@ public class PlanTripMethod extends RoutingResource {
                 }
                 TransitResponse<TransitEntryWithReferences<Response>> response = builder.getResponseForErrorTripPlan(status, plan);
                 logRequest.finishRequest(response);
-                return response;
+                return TransitResponseBuilder.getWsResponse(response);
             }
-            
+
             TripPlan tripPlan = plan.getPlan();
             if(tripPlan.itinerary != null) {
                 for(Itinerary itinerary : tripPlan.itinerary) {
@@ -199,12 +199,12 @@ public class PlanTripMethod extends RoutingResource {
 
             TransitResponse<TransitEntryWithReferences<Response>> response = builder.getResponseForTripPlan(plan);
 	        logRequest.finishRequest(response);
-	        return response;
+            return TransitResponseBuilder.getWsResponse(response);
         } catch(Exception e) {
             LOG.warn("Trip Planning Exception: ", e);
             TransitResponse<TransitEntryWithReferences<Response>> response = TransitResponseBuilder.<TransitEntryWithReferences<Response>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occured: " + e.getClass().getName());
             logRequest.exception(response, e);
-            return response;
+            return TransitResponseBuilder.getWsResponse(response);
         }
     }
     
@@ -232,7 +232,7 @@ public class PlanTripMethod extends RoutingResource {
          * TODO: org.opentripplanner.routing.impl.PathServiceImpl has COOORD parsing. Abstract that
          *       out so it's used here too...
          */
-        
+
         // create response object, containing a copy of all request parameters
         Response response = new Response(uriInfo);
         RoutingRequest request = null;

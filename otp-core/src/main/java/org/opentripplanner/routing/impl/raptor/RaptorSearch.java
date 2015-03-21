@@ -17,6 +17,7 @@ import org.opentripplanner.common.pqueue.BinHeap;
 import org.opentripplanner.common.pqueue.OTPPriorityQueue;
 import org.opentripplanner.common.pqueue.OTPPriorityQueueFactory;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
+import org.opentripplanner.routing.algorithm.strategies.SearchTerminationStrategy;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
@@ -43,6 +44,8 @@ import java.util.Set;
 
 public class RaptorSearch {
     private static final Logger log = LoggerFactory.getLogger(RaptorSearch.class);
+
+    private static final int WALK_TIMEOUT = 5 * 1000; // milliseconds
 
     List<RaptorState>[] statesByStop;
 
@@ -482,6 +485,16 @@ public class RaptorSearch {
                 .getTransferSlack() - options.getAlightSlack());
         ShortestPathTree spt;
         GenericDijkstra dijkstra = new GenericDijkstra(walkOptions);
+        dijkstra.setSearchTerminationStrategy(new SearchTerminationStrategy() {
+            private long start = System.currentTimeMillis();
+            public boolean shouldSearchContinue(Vertex origin, Vertex target, State current, ShortestPathTree spt, RoutingRequest traverseOptions) {
+                if(System.currentTimeMillis() - start > WALK_TIMEOUT) {
+                    throw new RuntimeException("[RAPTOR] Request timed out: " + traverseOptions);
+                }
+
+                return true;
+            }
+        });
         dijkstra.setShortestPathTreeFactory(bounder);
         List<State> transitStopStates = new ArrayList<State>();
 

@@ -48,7 +48,14 @@ import java.util.regex.Pattern;
 public class TransitResponseBuilder {
     private final static int API_VERSION = 2;
 
-	@AllArgsConstructor
+    public static javax.ws.rs.core.Response getWsResponse(TransitResponse<?> entity) {
+        return javax.ws.rs.core.Response.ok()
+                .entity(entity)
+                .header("X-BKK-Status", entity.getStatus())
+                .build();
+    }
+
+    @AllArgsConstructor
 	public static class DialectWrapper {
 
 		@Getter

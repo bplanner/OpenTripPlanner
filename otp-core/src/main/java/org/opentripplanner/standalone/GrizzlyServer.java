@@ -6,10 +6,15 @@ import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.core.spi.component.ioc.IoCComponentProviderFactory;
 import net.lingala.zip4j.core.ZipFile;
+import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.server.StaticHttpHandler;
+import org.glassfish.grizzly.http.server.accesslog.AccessLogAppender;
+import org.glassfish.grizzly.http.server.accesslog.AccessLogFormat;
+import org.glassfish.grizzly.http.server.accesslog.AccessLogProbe;
 import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.BindException;
+import java.util.Date;
+import java.util.Locale;
 
 public class GrizzlyServer {
 
@@ -116,7 +123,8 @@ public class GrizzlyServer {
         NetworkListener networkListener = 
                 new NetworkListener("otp_listener", "0.0.0.0", params.port); // TODO add option for address to listen on
         ThreadPoolConfig threadPoolConfig = ThreadPoolConfig.defaultConfig()
-                .setCorePoolSize(1).setMaxPoolSize(Runtime.getRuntime().availableProcessors());
+                .setCorePoolSize(1)
+                .setMaxPoolSize(Runtime.getRuntime().availableProcessors());
         networkListener.getTransport().setWorkerThreadPoolConfig(threadPoolConfig);
         httpServer.addListener(networkListener);
         ResourceConfig rc = new OTPApplicationConfig("org.opentripplanner", params.basicAuth);
@@ -142,6 +150,44 @@ public class GrizzlyServer {
         HttpHandler staticHandler = makeClientStaticHandler();
         httpServer.getServerConfiguration().addHttpHandler(staticHandler, "/bkk-gui/");
 
+        AccessLogFormat accessLogFormat = new AccessLogFormat() {
+            @Override
+            public String format(Response response, Date timeStamp, long responseNanos) {
+                HttpRequestPacket packet = response.getRequest().getRequest();
+                String url = packet.getRequestURI();
+                if(packet.getQueryString() != null)
+                    url += "?" + packet.getQueryString();
+
+                return String.format(
+                        Locale.US, "%tFT%<tT.%<tLZ : %d %s : %s \"%s\" [%.3f ms]",
+                        timeStamp,
+                        response.getResponse().getHttpStatus().getStatusCode(),
+                        response.getResponse().getHeader("X-BKK-Status"),
+                        packet.getMethod(),
+                        url,
+                        responseNanos / 1000000f);
+            }
+        };
+
+        AccessLogAppender accessLogAppender = new AccessLogAppender() {
+
+            private Logger logger = LoggerFactory.getLogger("org.opentripplanner.standalone.GrizzlyAccessLog");
+
+            public void append(String accessLogEntry) throws IOException {
+                logger.info(accessLogEntry);
+            }
+
+            @Override
+            public void close() throws IOException {
+            }
+        };
+
+        AccessLogProbe accessLogProbe = new AccessLogProbe(accessLogAppender, accessLogFormat);
+        httpServer.getServerConfiguration()
+                .getMonitoringConfig()
+                .getWebServerConfig()
+                .addProbes(accessLogProbe);
+
         for (NetworkListener l : httpServer.getListeners()) { l.getFileCache().setEnabled(false); }
         
         /* RELINQUISH CONTROL TO THE SERVER THREAD */
@@ -155,10 +201,8 @@ public class GrizzlyServer {
             LOG.error("IO exception while starting server.");
         } catch (InterruptedException ie) {
             LOG.info("Interrupted, shutting down.");
-            httpServer.stop();
+            httpServer.shutdown();
         }
-        
     }
-        
 }
 
