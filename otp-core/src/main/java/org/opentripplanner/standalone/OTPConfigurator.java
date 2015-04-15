@@ -122,6 +122,7 @@ public class OTPConfigurator {
         }
 
         RoutingRequest prototypeRoutingRequest = new RoutingRequest();
+        prototypeRoutingRequest.setTransferPenalty(180);
         prototypeRoutingRequest.setMaxTransfers(4);
         prototypeRoutingRequest.setTransferSlack(20);
         prototypeRoutingRequest.setBoardSlack(10);

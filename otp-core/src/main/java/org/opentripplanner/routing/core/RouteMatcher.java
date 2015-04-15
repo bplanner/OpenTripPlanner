@@ -167,4 +167,8 @@ public class RouteMatcher implements Cloneable, Serializable {
             throw new RuntimeException(e);
         }
     }
+
+    public boolean isEmpty() {
+        return agencyAndRouteIds.isEmpty() && agencyIdAndRouteNames.isEmpty() && routeNames.isEmpty();
+    }
 }
