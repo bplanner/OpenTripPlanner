@@ -13,10 +13,12 @@
 
 package org.opentripplanner.api.ws.oba_rest_api.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
-public class TransitStopTime {
+public class TransitStopTime implements Comparable<TransitStopTime> {
+
     private String stopId;
     private String stopHeadsign;
     private Long arrivalTime;
@@ -38,5 +40,27 @@ public class TransitStopTime {
     
     public boolean hasDepartureTime() {
         return departureTime != null;
+    }
+
+    @JsonIgnore
+    public Long getSomeTime() {
+        if(hasPredictedDepartureTime())
+            return predictedArrivalTime;
+
+        if(hasDepartureTime())
+            return departureTime;
+
+        if(hasPredictedArrivalTime())
+            return predictedArrivalTime;
+
+        if(hasArrivalTime())
+            return arrivalTime;
+
+        return Long.MAX_VALUE;
+    }
+
+    @Override
+    public int compareTo(TransitStopTime other) {
+        return Long.compare(getSomeTime(), other.getSomeTime());
     }
 }

@@ -202,7 +202,7 @@ public class PlanTripMethod extends RoutingResource {
             return TransitResponseBuilder.getWsResponse(response);
         } catch(Exception e) {
             LOG.warn("Trip Planning Exception: ", e);
-            TransitResponse<TransitEntryWithReferences<Response>> response = TransitResponseBuilder.<TransitEntryWithReferences<Response>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occured: " + e.getClass().getName());
+            TransitResponse<TransitEntryWithReferences<Response>> response = TransitResponseBuilder.<TransitEntryWithReferences<Response>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occurred: " + e.getClass().getName());
             logRequest.exception(response, e);
             return TransitResponseBuilder.getWsResponse(response);
         }
@@ -248,7 +248,7 @@ public class PlanTripMethod extends RoutingResource {
                 LOG.warn("Error while planning path: ", e);
             response.setError(error);
         } finally {
-            if (request != null) {
+            if (request != null && request.rctx != null) {
                 response.debug = request.rctx.debug;
                 request.cleanup(); // TODO verify that this is being done on Analyst web services
             }       

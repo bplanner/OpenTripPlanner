@@ -118,6 +118,10 @@ public class TransitResponseBuilder {
         _locale = httpRequestContext.getAcceptableLanguages().isEmpty() ? Locale.getDefault() : httpRequestContext.getAcceptableLanguages().get(0);
     }
 
+    public OTPTransitReferences getReferences() {
+        return _references;
+    }
+
     /* RESPONSE */
 
     public TransitResponse<TransitEntryWithReferences<TransitMetadata>> getResponseForMetadata(TransitMetadata metadata) {
