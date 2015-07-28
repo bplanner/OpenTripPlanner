@@ -133,6 +133,10 @@ public class Graph implements Serializable {
     private transient TimeZone timeZone = null;
 
     @Getter
+    @Setter
+    private List<String> feedIds = null;
+
+    @Getter
     @Setter    
     private String boundingPolyline = null;
     

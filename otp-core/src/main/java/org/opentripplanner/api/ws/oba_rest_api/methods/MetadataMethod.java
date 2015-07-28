@@ -63,6 +63,8 @@ public class MetadataMethod extends OneBusAwayApiMethod<TransitEntryWithReferenc
         RoutingRequest options = makeTraverseOptions(time, routerId);
         metadata.setAlertIds(getAlertsForApp(options, time, time));
 
+        metadata.setFeedIds(graph.getFeedIds());
+
         return responseBuilder.getResponseForMetadata(metadata);
     }
 

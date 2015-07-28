@@ -29,4 +29,5 @@ public class TransitMetadata {
     /** The bounding polyline the graph, in encoded polyline string. */
     private String boundingPolyLine;
     private List<String> alertIds;
+    private List<String> feedIds;
 }

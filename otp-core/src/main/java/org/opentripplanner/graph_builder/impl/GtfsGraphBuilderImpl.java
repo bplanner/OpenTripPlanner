@@ -157,6 +157,8 @@ public class GtfsGraphBuilderImpl implements GraphBuilder {
 
         MultiCalendarServiceImpl service = new MultiCalendarServiceImpl();
         GtfsStopContext stopContext = new GtfsStopContext();
+
+        graph.setFeedIds(new ArrayList<String>(_gtfsBundles.getBundles().size()));
         
         try {
             int bundleIndex = 0;
@@ -294,6 +296,9 @@ public class GtfsGraphBuilderImpl implements GraphBuilder {
         }
         for (Pathway pathway : store.getAllEntitiesForType(Pathway.class)) {
             pathway.getId().setAgencyId(reader.getDefaultAgencyId());
+        }
+        for (FeedInfo feedInfo : store.getAllEntitiesForType(FeedInfo.class)) {
+            graph.getFeedIds().add(String.format("%s:%s", feedInfo.getPublisherUrl(), feedInfo.getVersion()));
         }
 
         store.close();
