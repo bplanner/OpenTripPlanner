@@ -45,7 +45,7 @@ public class TransitStopTime implements Comparable<TransitStopTime> {
     @JsonIgnore
     public Long getSomeTime() {
         if(hasPredictedDepartureTime())
-            return predictedArrivalTime;
+            return predictedDepartureTime;
 
         if(hasDepartureTime())
             return departureTime;
