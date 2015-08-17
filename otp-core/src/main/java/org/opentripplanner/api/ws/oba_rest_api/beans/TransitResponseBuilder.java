@@ -399,9 +399,11 @@ public class TransitResponseBuilder {
 
         if(vehicle.getStopId() != null) {
             Stop stop = _transitIndexService.getAllStops().get(vehicle.getStopId());
-            if(stop != null) {
+            if(stop != null && (_internalRequest || !GtfsLibrary.isAgencyInternal(stop))) {
                 transitVehicle.setStopId(stop.getId().toString());
                 addToReferences(stop);
+            } else {
+                transitVehicle.setStopId(null);
             }
         }
 
