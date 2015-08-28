@@ -17,6 +17,7 @@ package org.opentripplanner.gtfs;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang.StringUtils;
 import org.onebusaway.csv_entities.schema.DefaultEntitySchemaFactory;
 import org.onebusaway.csv_entities.schema.EntitySchemaFactory;
 import org.onebusaway.csv_entities.schema.annotations.CsvField;
@@ -203,6 +204,14 @@ public class GtfsLibrary {
     public static boolean isAgencyInternal(Trip trip) {
         TripExtension tripExtension = trip.getExtension(TripExtension.class);
         return tripExtension != null && "N".equals(tripExtension.getBkkUtas());
+    }
+
+    public static boolean isShapeReferenceTrip(Trip trip) {
+        return trip.getId().getId().startsWith("REF_");
+    }
+
+    public static boolean isRouteReferenceTrip(Trip trip) {
+        return !StringUtils.isEmpty(trip.getTripShortName());
     }
 
     @Data

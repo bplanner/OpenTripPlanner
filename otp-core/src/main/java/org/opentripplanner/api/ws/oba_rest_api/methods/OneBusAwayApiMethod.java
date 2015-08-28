@@ -1075,44 +1075,42 @@ public abstract class OneBusAwayApiMethod<T> {
         return options;
     }
 
-    protected final static String CACHE_REFERENCE_VARIANTS_FOR_ROUTE = "referenceVariantsForRoute";
     protected final List<RouteVariant> getReferenceVariantsForRoute(AgencyAndId routeId) {
+        String CACHE_REFERENCE_VARIANTS_FOR_ROUTE = "referenceVariantsForRoute-" + isInternalRequest();
         List<RouteVariant> filteredVariants = cacheService.<AgencyAndId, List<RouteVariant>>get(CACHE_REFERENCE_VARIANTS_FOR_ROUTE, routeId);
         if(filteredVariants != null) {
             return filteredVariants;
         }
-        
+
         List<RouteVariant> routeVariants = transitIndexService.getVariantsForRoute(routeId);
         Iterable<RouteVariant> referenceVariants = Iterables.filter(routeVariants, new Predicate<RouteVariant>() {
             @Override
             public boolean apply(RouteVariant input) {
                 boolean reference = false;
                 for(TripsModelInfo tripsModelInfo : input.getTrips()) {
-                    reference |= "REFERENCE".equals(tripsModelInfo.getCalendarId());
+                    reference |= tripsModelInfo.isRouteReference();
                 }
                 return reference;
             }
         });
-        
+
         filteredVariants = Lists.newArrayList(referenceVariants);
-        if(filteredVariants.isEmpty()) {
-            referenceVariants = Iterables.filter(routeVariants, new Predicate<RouteVariant>() {
+
+        /*if(isInternalRequest()) {
+            Iterable<RouteVariant> shapeReferenceTrips = Iterables.filter(routeVariants, new Predicate<RouteVariant>() {
                 @Override
                 public boolean apply(RouteVariant input) {
                     boolean reference = false;
                     for(TripsModelInfo tripsModelInfo : input.getTrips()) {
-                        reference |= tripsModelInfo.isReference();
+                        reference |= tripsModelInfo.isShapeReference();
                     }
                     return reference;
                 }
             });
-            filteredVariants = Lists.newArrayList(referenceVariants);
-        }
-        
-        /*if(filteredVariants.isEmpty()) {
-            filteredVariants = routeVariants;
+
+            filteredVariants.addAll(Lists.newArrayList(shapeReferenceTrips));
         }*/
-        
+
         cacheService.put(CACHE_REFERENCE_VARIANTS_FOR_ROUTE, routeId, filteredVariants);
         return filteredVariants;
     }

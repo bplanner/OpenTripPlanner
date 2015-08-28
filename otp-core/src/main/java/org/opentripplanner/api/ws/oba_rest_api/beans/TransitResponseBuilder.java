@@ -277,15 +277,16 @@ public class TransitResponseBuilder {
     public TransitRouteVariant getTransitVariant(RouteVariant variant) {
         List<String> stopIds = new ArrayList<String>(variant.getStops().size());
         for(Stop stop : variant.getStops()) {
-            if(GtfsLibrary.isAgencyInternal(stop))
+            if(!_internalRequest && GtfsLibrary.isAgencyInternal(stop))
                 continue;
 
             addToReferences(stop);
             stopIds.add(stop.getId().toString());
         }
 
-        if(_cacheService.<RouteVariant, TransitRouteVariant>containsKey(CACHE_TRANSIT_VARIANT, variant)) {
-            return _cacheService.<RouteVariant, TransitRouteVariant>get(CACHE_TRANSIT_VARIANT, variant);
+        String id = String.format("%s-%s", variant.getId(), _internalRequest);
+        if(_cacheService.<String, TransitRouteVariant>containsKey(CACHE_TRANSIT_VARIANT, id)) {
+            return _cacheService.<String, TransitRouteVariant>get(CACHE_TRANSIT_VARIANT, id);
         }
         
         TransitRouteVariant transitVariant = new TransitRouteVariant();
@@ -294,8 +295,8 @@ public class TransitResponseBuilder {
         transitVariant.setDirection(variant.getDirection());
         transitVariant.setPolyline(getPolyline(variant.getGeometry()));
         transitVariant.setStopIds(stopIds);
-        
-        _cacheService.<RouteVariant, TransitRouteVariant>put(CACHE_TRANSIT_VARIANT, variant, transitVariant);
+
+        _cacheService.<String, TransitRouteVariant>put(CACHE_TRANSIT_VARIANT, id, transitVariant);
         return transitVariant;
     }
     
@@ -1123,9 +1124,10 @@ public class TransitResponseBuilder {
                 trip = board.getPattern().getTrip();
             }
 
-            if(trip != null && !isOperationalReferenceTrip(trip))
+            if(trip != null /*&& GtfsLibrary.isRouteReferenceTrip(trip)*/)
                 out.add(trip.getRoute().getId());
         }
+
         return new ArrayList<AgencyAndId>(out);
     }
 
@@ -1134,10 +1136,6 @@ public class TransitResponseBuilder {
         return pattern != null ? pattern.getTrip(tripId) : null;
     }
 
-    private boolean isOperationalReferenceTrip(Trip trip) {
-        return trip.getId().getId().startsWith("REF_");
-    }
-    
     public final static String CACHE_SERVICE_DATE = "serviceDate";
     public final String getServiceDateAsString(ServiceDate serviceDate) {
         String serviceDateAsString = _cacheService.<ServiceDate, String>get(CACHE_SERVICE_DATE, serviceDate);

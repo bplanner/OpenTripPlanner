@@ -548,7 +548,7 @@ public class GTFSPatternHopFactory {
             results.put(tripPattern, result);
         }
         // BKK: tripShortName ~= referencia útvonal, ezért azt tároljuk el
-        if(null != trip.getTripShortName()) {
+        if(GtfsLibrary.isRouteReferenceTrip(trip)) {
             tripPattern.exemplar = trip;
         }
         tripPattern.addTrip(trip, stopTimes);

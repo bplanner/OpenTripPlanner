@@ -13,17 +13,12 @@
 
 package org.opentripplanner.routing.transit_index;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
+import lombok.Getter;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
@@ -39,12 +34,15 @@ import org.opentripplanner.routing.transit_index.adapters.TripsModelInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
-import lombok.Getter;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * This represents a particular stop pattern on a particular route. For example, the N train has at least four different variants: express (over the
@@ -287,12 +285,13 @@ public class RouteVariant implements Serializable {
 
     public void addTrip(Trip trip, int number) {
         // BKK: tripShortName ~= referencia útvonal, ezért azt tároljuk el
-        boolean reference = null != trip.getTripShortName();
+        boolean routeReference = GtfsLibrary.isRouteReferenceTrip(trip),
+                shapeReference = GtfsLibrary.isShapeReferenceTrip(trip);
         this.trips.add(new TripsModelInfo(trip.getTripHeadsign(), number, trip.getServiceId().getId(),
-                                          trip.getId().getId(), trip.getId().getAgencyId(), reference));
-        if(reference || headsign == null)
+                                          trip.getId().getId(), trip.getId().getAgencyId(), routeReference, shapeReference));
+        if(routeReference || headsign == null)
             headsign = trip.getTripHeadsign();
-        
+
         if (direction == null) {
             direction = trip.getDirectionId();
         } else {

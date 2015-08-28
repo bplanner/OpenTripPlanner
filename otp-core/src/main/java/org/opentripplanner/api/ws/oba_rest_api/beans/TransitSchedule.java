@@ -13,13 +13,15 @@
 
 package org.opentripplanner.api.ws.oba_rest_api.beans;
 
-import java.util.Collection;
 import lombok.Data;
+
+import java.util.Collection;
 
 @Data
 public class TransitSchedule {
     private String stopId;
     private String serviceDate;
+    private Collection<String> routeIds;
     private Collection<String> alertIds;
     private Collection<TransitRouteSchedule> schedules;
 }

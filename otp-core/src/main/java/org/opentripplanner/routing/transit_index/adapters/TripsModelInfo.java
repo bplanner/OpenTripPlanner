@@ -13,16 +13,13 @@
 
 package org.opentripplanner.routing.transit_index.adapters;
 
-import java.io.Serializable;
-
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.onebusaway.gtfs.model.AgencyAndId;
-
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 @XmlRootElement(name = "trip")
 @AllArgsConstructor
@@ -56,5 +53,8 @@ public class TripsModelInfo implements Serializable {
     String agency;
 
     @Getter
-    boolean reference;
+    boolean routeReference;
+
+    @Getter
+    boolean shapeReference;
 }
