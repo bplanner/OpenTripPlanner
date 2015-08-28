@@ -32,7 +32,7 @@ public class BicycleRentalMethod extends OneBusAwayApiMethod<TransitListEntryWit
     protected TransitResponse<TransitListEntryWithReferences<TransitBikeRentalStation>> getResponse() {
         BikeRentalStationService bikeRentalStationService = graph.getService(BikeRentalStationService.class);
         if(bikeRentalStationService == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_BIKE_RENTAL_SERVICE, "Missing bike rental sevice.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_BIKE_RENTAL_SERVICE, "Missing bike rental service.");
         }
 
         Collection<BikeRentalStation> stations = bikeRentalStationService.getStations();

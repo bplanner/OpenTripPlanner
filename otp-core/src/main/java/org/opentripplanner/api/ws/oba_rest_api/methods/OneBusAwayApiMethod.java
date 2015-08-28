@@ -38,6 +38,7 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.*;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.model.T2;
 import org.opentripplanner.gtfs.GtfsLibrary;
+import org.opentripplanner.routing.bike_rental.BikeRentalStationService;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
@@ -66,6 +67,7 @@ import org.opentripplanner.routing.vertextype.TransitStop;
 import org.opentripplanner.updater.stoptime.TimetableSnapshotSource;
 import org.opentripplanner.updater.vehicle_location.VehicleLocation;
 import org.opentripplanner.updater.vehicle_location.VehicleLocationService;
+import org.opentripplanner.updater.vehicle_location.VehicleLocationServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,7 +218,7 @@ public abstract class OneBusAwayApiMethod<T> {
     protected OneBusAwayApiCacheService cacheService;
     
     protected TransitResponseBuilder responseBuilder;
-    
+
     @Getter(lazy=true)
     private final TimetableResolver timetableResolver = _getTimetableResolver();
     
@@ -228,18 +230,14 @@ public abstract class OneBusAwayApiMethod<T> {
         if(graph == null) {
             return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH));
         }
-        
+
         transitIndexService = graph.getService(TransitIndexService.class);
         if (transitIndexService == null) {
             return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE));
         }
-        
-        cacheService = graph.getService(OneBusAwayApiCacheService.class);
-        if(cacheService == null) {
-            cacheService = new OneBusAwayApiCacheService();
-            graph.putService(OneBusAwayApiCacheService.class, cacheService);
-        }
-        
+
+        createDefaultServices();
+
         responseBuilder = new TransitResponseBuilder(graph, references.getReferences(), dialect.getDialect(), internalRequest, httpContext.getRequest());
 
         TransitResponse<T> transitResponse;
@@ -268,6 +266,28 @@ public abstract class OneBusAwayApiMethod<T> {
         }*/
 
         return TransitResponseBuilder.getWsResponse(transitResponse);
+    }
+
+    private void createDefaultServices() {
+        cacheService = graph.getService(OneBusAwayApiCacheService.class);
+        if(cacheService == null) {
+            cacheService = new OneBusAwayApiCacheService();
+            graph.putService(OneBusAwayApiCacheService.class, cacheService);
+        }
+
+        BikeRentalStationService service = graph.getService(BikeRentalStationService.class);
+        if (service == null) {
+            service = new BikeRentalStationService();
+            graph.putService(BikeRentalStationService.class, service);
+        }
+
+        VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
+        if(vehicleLocationService == null) {
+            VehicleLocationServiceImpl impl = new VehicleLocationServiceImpl();
+            impl.setGraph(graph);
+            vehicleLocationService = impl;
+            graph.putService(VehicleLocationService.class, vehicleLocationService);
+        }
     }
 
     abstract protected TransitResponse<T> getResponse();

@@ -44,7 +44,7 @@ public class VehicleForTripMethod extends OneBusAwayApiMethod<TransitListEntryWi
         if(vehicleLocationService == null)
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
         
-        if(ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
+        if(ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED);
         }
 
