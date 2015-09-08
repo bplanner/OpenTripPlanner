@@ -56,49 +56,49 @@ public class TransitResponseBuilder {
     }
 
     @AllArgsConstructor
-	public static class DialectWrapper {
+    public static class DialectWrapper {
 
-		@Getter
-		private final Dialect dialect;
+        @Getter
+        private final Dialect dialect;
 
-		public static DialectWrapper valueOf(String value) {
-			return new DialectWrapper(Dialect.valueOf(value.toUpperCase()));
-		}
-	}
+        public static DialectWrapper valueOf(String value) {
+            return new DialectWrapper(Dialect.valueOf(value.toUpperCase()));
+        }
+    }
 
-	@AllArgsConstructor
-	public static class ReferencesWrapper {
+    @AllArgsConstructor
+    public static class ReferencesWrapper {
 
-		@Getter
-		private final EnumSet<References> references;
+        @Getter
+        private final EnumSet<References> references;
 
-		public static ReferencesWrapper valueOf(String value) {
-			if("false".equals(value)) return new ReferencesWrapper(EnumSet.noneOf(References.class));
-			if("compact".equals(value)) return new ReferencesWrapper(EnumSet.allOf(References.class));
+        public static ReferencesWrapper valueOf(String value) {
+            if ("false".equals(value)) return new ReferencesWrapper(EnumSet.noneOf(References.class));
+            if ("compact".equals(value)) return new ReferencesWrapper(EnumSet.allOf(References.class));
 
-            if(!StringUtils.isEmpty(value) && !value.equals("true")) {
+            if (!StringUtils.isEmpty(value) && !value.equals("true")) {
                 String[] values = value.split(",");
                 EnumSet<References> ret = EnumSet.noneOf(References.class);
-                for(String v : values) {
+                for (String v : values) {
                     References rv = References.valueOf(v.toUpperCase());
-                    if(rv != null) {
+                    if (rv != null) {
                         ret.add(rv);
                     }
                 }
                 return new ReferencesWrapper(ret);
             }
 
-			return new ReferencesWrapper(EnumSet.of(References.AGENCIES, References.ROUTES, References.TRIPS, References.STOPS, References.ALERTS));
-		}
-	}
-
-	public enum Dialect {
-		OTP, OBA, MOBILE
+            return new ReferencesWrapper(EnumSet.of(References.AGENCIES, References.ROUTES, References.TRIPS, References.STOPS, References.ALERTS));
+        }
     }
 
-	public enum References {
-		COMPACT, AGENCIES, ROUTES, TRIPS, STOPS, ALERTS
-	}
+    public enum Dialect {
+        OTP, OBA, MOBILE
+    }
+
+    public enum References {
+        COMPACT, AGENCIES, ROUTES, TRIPS, STOPS, ALERTS
+    }
 
     private Locale _locale;
     private Dialect _dialect;
@@ -107,14 +107,14 @@ public class TransitResponseBuilder {
     private OTPTransitReferences _references = new OTPTransitReferences();
 
     private EnumSet<References> _returnReferences;
-	private boolean _internalRequest;
+    private boolean _internalRequest;
 
     public TransitResponseBuilder(Graph graph, EnumSet<References> references, Dialect dialect, boolean internalRequest, HttpRequestContext httpRequestContext) {
         _dialect = dialect;
         _returnReferences = references;
         _transitIndexService = graph.getService(TransitIndexService.class);
         _cacheService = graph.getService(OneBusAwayApiCacheService.class);
-	    _internalRequest = internalRequest;
+        _internalRequest = internalRequest;
         _locale = httpRequestContext.getAcceptableLanguages().isEmpty() ? Locale.getDefault() : httpRequestContext.getAcceptableLanguages().get(0);
     }
 
@@ -129,7 +129,7 @@ public class TransitResponseBuilder {
     }
 
     public TransitResponse<TransitListEntryWithReferences<TransitAgencyWithCoverage>> getResponseForAgenciesWithCoverage(List<TransitAgencyWithCoverage> agenciesWithCoverage) {
-        for(TransitAgencyWithCoverage agencyWithCoverage : agenciesWithCoverage) {
+        for (TransitAgencyWithCoverage agencyWithCoverage : agenciesWithCoverage) {
             addToReferences(_transitIndexService.getAgency(agencyWithCoverage.getAgencyId()));
         }
         return getOkResponse(list(false, agenciesWithCoverage));
@@ -139,17 +139,17 @@ public class TransitResponseBuilder {
         return getOkResponse(entity(getAgency(agency)));
     }
 
-	public TransitResponse<TransitEntryWithReferences<TransitAlert>> getResponseForAlert(Alert alert) {
-		return getOkResponse(entity(getAlert(alert)));
-	}
+    public TransitResponse<TransitEntryWithReferences<TransitAlert>> getResponseForAlert(Alert alert) {
+        return getOkResponse(entity(getAlert(alert)));
+    }
 
     public TransitResponse<TransitEntryWithReferences<TransitRoute>> getResponseForRoute(Route route) {
         return getOkResponse(entity(getRoute(route)));
     }
 
-	public TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponseForRoutes(List<Route> routes) {
-		return getOkResponse(list(false, getRoutes(routes)));
-	}
+    public TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponseForRoutes(List<Route> routes) {
+        return getOkResponse(list(false, getRoutes(routes)));
+    }
 
     public TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponseForTransitRoutes(List<TransitRoute> transitRoutes) {
         return getOkResponse(list(false, transitRoutes));
@@ -160,7 +160,7 @@ public class TransitResponseBuilder {
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitStopsForRoute>> getResponseForStopsForRoute(Route route, List<RouteVariant> variants, List<String> alertIds,
-            boolean includePolylines) {
+                                                                                                         boolean includePolylines) {
 
         return getOkResponse(entity(getStopsForRoute(route, variants, alertIds, includePolylines)));
     }
@@ -174,7 +174,7 @@ public class TransitResponseBuilder {
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitTripDetailsOTP>> getResponseForTrip(TransitTrip trip, ServiceDate serviceDate, List<String> alertIds,
-            List<Stop> stops, List<TransitStopTime> stopTimes, TransitVehicle vehicle, RouteVariant variant) {
+                                                                                                 List<Stop> stops, List<TransitStopTime> stopTimes, TransitVehicle vehicle, RouteVariant variant) {
 
         return getOkResponse(entity(getTrip(trip, serviceDate, alertIds, stops, stopTimes, vehicle, variant)));
     }
@@ -184,27 +184,27 @@ public class TransitResponseBuilder {
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitArrivalsAndDepartures>> getResponseForStop(Stop stop, boolean limitExceeded,
-            List<TransitScheduleStopTime> stopTimes, List<String> alertIds, List<TransitTrip> trips, List<String> nearbyStopIds) {
+                                                                                                        List<TransitScheduleStopTime> stopTimes, List<String> alertIds, List<TransitTrip> trips, List<String> nearbyStopIds) {
 
         return getOkResponse(entity(limitExceeded, getArrivalsAndDepartures(stop, stopTimes, alertIds, trips, nearbyStopIds)));
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitStopWithArrivalsAndDepartures>> getResponseForStop(Stop stop,
-            List<TransitArrivalAndDeparture> arrivalsAndDepartures, List<String> alertIds, List<String> nearbyStopIds) {
+                                                                                                                List<TransitArrivalAndDeparture> arrivalsAndDepartures, List<String> alertIds, List<String> nearbyStopIds) {
 
         return getOkResponse(entity(getArrivalsAndDeparturesOBA(stop, arrivalsAndDepartures, alertIds, nearbyStopIds)));
     }
 
-	public TransitResponse<TransitListEntryWithReferences<TransitStop>> getResponseForStops(Collection<Stop> stops, Map<String, List<String>> alertIds) {
+    public TransitResponse<TransitListEntryWithReferences<TransitStop>> getResponseForStops(Collection<Stop> stops, Map<String, List<String>> alertIds) {
         List<TransitStop> transitStops = new ArrayList<TransitStop>(stops.size());
-        for(Stop stop : stops) {
+        for (Stop stop : stops) {
             TransitStop transitStop = getStop(stop, alertIds.get(stop.getId().toString()));
 
             // Stops having no departures should be ignored from stopsForLocation on mobile platform
-            if(_dialect == Dialect.MOBILE && transitStop.getRouteIds().isEmpty()) {
-                continue; 
+            if (_dialect == Dialect.MOBILE && transitStop.getRouteIds().isEmpty()) {
+                continue;
             }
-            
+
             transitStops.add(transitStop);
         }
         return getOkResponse(list(false, transitStops));
@@ -274,10 +274,11 @@ public class TransitResponseBuilder {
     /* SUB-RESPONSE */
 
     private final static String CACHE_TRANSIT_VARIANT = "transitVariant";
+
     public TransitRouteVariant getTransitVariant(RouteVariant variant) {
         List<String> stopIds = new ArrayList<String>(variant.getStops().size());
-        for(Stop stop : variant.getStops()) {
-            if(!_internalRequest && GtfsLibrary.isAgencyInternal(stop))
+        for (Stop stop : variant.getStops()) {
+            if (!_internalRequest && GtfsLibrary.isAgencyInternal(stop))
                 continue;
 
             addToReferences(stop);
@@ -285,10 +286,10 @@ public class TransitResponseBuilder {
         }
 
         String id = String.format("%s-%s", variant.getId(), _internalRequest);
-        if(_cacheService.<String, TransitRouteVariant>containsKey(CACHE_TRANSIT_VARIANT, id)) {
+        if (_cacheService.<String, TransitRouteVariant>containsKey(CACHE_TRANSIT_VARIANT, id)) {
             return _cacheService.<String, TransitRouteVariant>get(CACHE_TRANSIT_VARIANT, id);
         }
-        
+
         TransitRouteVariant transitVariant = new TransitRouteVariant();
         transitVariant.setName(variant.getName());
         transitVariant.setHeadsign(variant.getHeadsign());
@@ -299,15 +300,15 @@ public class TransitResponseBuilder {
         _cacheService.<String, TransitRouteVariant>put(CACHE_TRANSIT_VARIANT, id, transitVariant);
         return transitVariant;
     }
-    
+
     public TransitTripDetailsOTP getTrip(TransitTrip trip, ServiceDate serviceDate, List<String> alertIds,
-            List<Stop> stops, List<TransitStopTime> stopTimes, TransitVehicle vehicle, RouteVariant variant) {
-        
+                                         List<Stop> stops, List<TransitStopTime> stopTimes, TransitVehicle vehicle, RouteVariant variant) {
+
         addToReferences(trip);
-        
-        for(Stop stop : stops)
+
+        for (Stop stop : stops)
             addToReferences(stop);
-        
+
         TransitTripDetailsOTP transitTripDetails = new TransitTripDetailsOTP();
         transitTripDetails.setVehicle(vehicle);
         transitTripDetails.setAlertIds(alertIds);
@@ -315,40 +316,40 @@ public class TransitResponseBuilder {
         transitTripDetails.setStopTimes(stopTimes);
         transitTripDetails.setServiceDate(getServiceDateAsString(serviceDate));
 
-        if(!stopTimes.isEmpty()) {
+        if (!stopTimes.isEmpty()) {
             transitTripDetails.setPolyline(getPolyline(variant.getGeometry()));
         }
 
         return transitTripDetails;
     }
-    
+
     public TransitArrivalsAndDepartures getArrivalsAndDepartures(Stop stop,
-            List<TransitScheduleStopTime> stopTimes, List<String> alertIds, List<TransitTrip> trips, List<String> nearbyStopIds) {
-        
+                                                                 List<TransitScheduleStopTime> stopTimes, List<String> alertIds, List<TransitTrip> trips, List<String> nearbyStopIds) {
+
         TransitArrivalsAndDepartures tad = new TransitArrivalsAndDepartures();
         tad.setStopId(stop.getId().toString());
         tad.setStopTimes(stopTimes);
         tad.setAlertIds(alertIds);
         tad.setNearbyStopIds(nearbyStopIds);
         addToReferences(stop);
-        if(trips != null) {
-            for(TransitTrip trip : trips) {
+        if (trips != null) {
+            for (TransitTrip trip : trips) {
                 addToReferences(trip);
             }
         }
         return tad;
     }
-    
+
     public TransitStopWithArrivalsAndDepartures getArrivalsAndDeparturesOBA(Stop stop,
-			List<TransitArrivalAndDeparture> arrivalsAndDepartures, List<String> alertIds, List<String> nearbyStopIds) {
-        
+                                                                            List<TransitArrivalAndDeparture> arrivalsAndDepartures, List<String> alertIds, List<String> nearbyStopIds) {
+
         TransitStopWithArrivalsAndDepartures tad = new TransitStopWithArrivalsAndDepartures();
         tad.setStopId(stop.getId().toString());
         tad.setArrivalsAndDepartures(arrivalsAndDepartures);
         tad.setSituationIds(alertIds);
         tad.setNearbyStopIds(nearbyStopIds);
         addToReferences(stop);
-        
+
         return tad;
     }
 
@@ -364,47 +365,49 @@ public class TransitResponseBuilder {
         transitVehicle.setDeviated(vehicle.isDeviated());
         transitVehicle.setServiceDate(getServiceDateAsString(vehicle.getServiceDate()));
         transitVehicle.setCongestionLevel(vehicle.getCongestionLevel());
-	    transitVehicle.setStopDistancePercent(vehicle.getStopDistancePercent());
+        transitVehicle.setStopDistancePercent(vehicle.getStopDistancePercent());
 
-	    if(_internalRequest) {
-		    transitVehicle.setBusPhoneNumber(vehicle.getBusPhoneNumber());
-		    transitVehicle.setDriverName(vehicle.getDriverName());
-		    transitVehicle.setBlockId(vehicle.getBlockId());
-		}
+        if (_internalRequest) {
+            transitVehicle.setBusPhoneNumber(vehicle.getBusPhoneNumber());
+            transitVehicle.setDriverName(vehicle.getDriverName());
+            transitVehicle.setBlockId(vehicle.getBlockId());
+        }
 
-
-	    if(vehicle.getVehicleRouteType() != null) {
-		    try {
-		    transitVehicle.setVehicleRouteType(GtfsLibrary.getTraverseMode(vehicle.getVehicleRouteType()));
-		    } catch(Exception e) {
-			    transitVehicle.setVehicleRouteType(TraverseMode.BUS);
-		    }
-	    }
-
-        if(vehicle.getRouteId() != null) {
+        if (vehicle.getRouteId() != null) {
             Route route = _transitIndexService.getAllRoutes().get(vehicle.getRouteId());
-            if(_internalRequest || !GtfsLibrary.isAgencyInternal(route)) {
+            if (_internalRequest || !GtfsLibrary.isAgencyInternal(route)) {
                 transitVehicle.setRouteId(route.getId().toString());
                 addToReferences(route);
-            }
-        }
-
-        if(vehicle.getTripId() != null) {
-            Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
-            if(_internalRequest || !GtfsLibrary.isAgencyInternal(trip)) {
-                transitVehicle.setTripId(vehicle.getTripId().toString());
             } else {
                 transitVehicle.setRouteId(null);
+                transitVehicle.setVehicleRouteType(GtfsLibrary.getTraverseMode(route));
             }
         }
 
-        if(vehicle.getStopId() != null) {
+        if (vehicle.getTripId() != null) {
+            Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
+            if (_internalRequest || !GtfsLibrary.isAgencyInternal(trip)) {
+                transitVehicle.setTripId(vehicle.getTripId().toString());
+            } else {
+                transitVehicle.setTripId(null);
+            }
+        }
+
+        if (vehicle.getStopId() != null) {
             Stop stop = _transitIndexService.getAllStops().get(vehicle.getStopId());
-            if(stop != null && (_internalRequest || !GtfsLibrary.isAgencyInternal(stop))) {
+            if (stop != null && (_internalRequest || !GtfsLibrary.isAgencyInternal(stop))) {
                 transitVehicle.setStopId(stop.getId().toString());
                 addToReferences(stop);
             } else {
                 transitVehicle.setStopId(null);
+            }
+        }
+
+        if (vehicle.getVehicleRouteType() != null) {
+            try {
+                transitVehicle.setVehicleRouteType(GtfsLibrary.getTraverseMode(vehicle.getVehicleRouteType()));
+            } catch (Exception e) {
+                transitVehicle.setVehicleRouteType(TraverseMode.BUS);
             }
         }
 
@@ -415,7 +418,7 @@ public class TransitResponseBuilder {
         TransitSearch transitSearch = new TransitSearch();
         transitSearch.setQuery(query);
         transitSearch.setAlertIds(alertIds);
-        
+
         return transitSearch;
     }
 
@@ -425,29 +428,30 @@ public class TransitResponseBuilder {
         transitSearch.setStopIds(stopIds);
         transitSearch.setRouteIds(routeIds);
         transitSearch.setAlertIds(alertIds);
-        
+
         return transitSearch;
     }
-    
+
     public List<TransitRoute> getRoutes(Collection<Route> routes) {
         List<TransitRoute> transitRoutes = new ArrayList<TransitRoute>(routes.size());
-        
-        for(Route route : routes) {
+
+        for (Route route : routes) {
             transitRoutes.add(getRoute(route));
             addToReferences(route.getAgency());
         }
-        
+
         return transitRoutes;
     }
     
     /* BASE ENTITIES */
 
     private final static String CACHE_AGENCY = "agency";
+
     public TransitAgency getAgency(Agency agency) {
-        if(_cacheService.<Agency, TransitAgency>containsKey(CACHE_AGENCY, agency)) {
+        if (_cacheService.<Agency, TransitAgency>containsKey(CACHE_AGENCY, agency)) {
             return _cacheService.<Agency, TransitAgency>get(CACHE_AGENCY, agency);
         }
-                
+
         TransitAgency transitAgency = new TransitAgency();
         transitAgency.setId(agency.getId());
         transitAgency.setLang(agency.getLang());
@@ -455,45 +459,45 @@ public class TransitResponseBuilder {
         transitAgency.setPhone(agency.getPhone());
         transitAgency.setTimezone(agency.getTimezone());
         transitAgency.setUrl(agency.getUrl());
-        
+
         _cacheService.<Agency, TransitAgency>put(CACHE_AGENCY, agency, transitAgency);
         return transitAgency;
     }
-    
+
     public TransitRoute getRoute(Route route) {
         String CACHE_ROUTE = "route_" + _dialect + "_" + _returnReferences;
         addToReferences(route.getAgency());
-        
-        if(_cacheService.<Route, TransitRoute>containsKey(CACHE_ROUTE, route)) {
+
+        if (_cacheService.<Route, TransitRoute>containsKey(CACHE_ROUTE, route)) {
             return _cacheService.<Route, TransitRoute>get(CACHE_ROUTE, route);
         }
-        
+
         TransitRoute transitRoute = new TransitRoute();
         transitRoute.setAgencyId(route.getAgency().getId());
         transitRoute.setColor(route.getColor());
-	    if(!_returnReferences.contains(References.COMPACT)) {
-			transitRoute.setDescription(route.getDesc());
-	    }
+        if (!_returnReferences.contains(References.COMPACT)) {
+            transitRoute.setDescription(route.getDesc());
+        }
         transitRoute.setId(route.getId().toString());
         transitRoute.setLongName(route.getLongName());
         transitRoute.setShortName(route.getShortName());
         transitRoute.setTextColor(route.getTextColor());
         transitRoute.setBikesAllowed(route.getBikesAllowed() == 1);
-        if(_dialect == Dialect.OBA) {
-	        transitRoute.setType(route.getType());
+        if (_dialect == Dialect.OBA) {
+            transitRoute.setType(route.getType());
         } else {
-	        transitRoute.setType(GtfsLibrary.getTraverseMode(route));
+            transitRoute.setType(GtfsLibrary.getTraverseMode(route));
         }
-        if(_dialect == Dialect.OBA && transitRoute.getShortName() == null) {
+        if (_dialect == Dialect.OBA && transitRoute.getShortName() == null) {
             transitRoute.setShortName("");
         }
         transitRoute.setUrl(route.getUrl());
-        
+
         _cacheService.<Route, TransitRoute>put(CACHE_ROUTE, route, transitRoute);
         return transitRoute;
     }
-    
-//    private final String CACHE_ROUTE_DETAILS = "routeDetails";
+
+    //    private final String CACHE_ROUTE_DETAILS = "routeDetails";
     public TransitRouteDetails getRoute(Route route, List<RouteVariant> variants, List<RouteVariant> relatedVariants, List<String> alertIds) {
         addToReferences(route);
 
@@ -502,13 +506,13 @@ public class TransitResponseBuilder {
 //        }
 
         List<TransitRouteVariant> transitVariants = new ArrayList<TransitRouteVariant>(variants.size());
-        for(RouteVariant variant : variants) {
+        for (RouteVariant variant : variants) {
             TransitRouteVariant transitVariant = getTransitVariant(variant);
             transitVariants.add(transitVariant);
         }
 
-        if(relatedVariants != null) {
-            for(RouteVariant relatedVariant : relatedVariants) {
+        if (relatedVariants != null) {
+            for (RouteVariant relatedVariant : relatedVariants) {
                 TransitRouteVariant relatedTransitVariant = getTransitVariant(relatedVariant);
                 relatedTransitVariant.setRouteId(relatedVariant.getRoute().getId().toString());
                 transitVariants.add(relatedTransitVariant);
@@ -533,84 +537,85 @@ public class TransitResponseBuilder {
 //        _cacheService.<Route, TransitRoute>put(CACHE_ROUTE_DETAILS, route, transitRoute);
         return transitRoute;
     }
-    
+
     // CACHE
     public TransitStopsForRoute getStopsForRoute(Route route, List<RouteVariant> variants, List<String> alertIds, boolean includePolylines) {
 
         List<TransitPolyline> polylines = new LinkedList<TransitPolyline>();
         List<String> stopIds = new LinkedList<String>();
-        
+
         List<TransitStopGroup> stopGroups = new LinkedList<TransitStopGroup>();
-        for(RouteVariant variant : variants) {
-            
+        for (RouteVariant variant : variants) {
+
             TransitStopGroupName stopGroupName = new TransitStopGroupName();
             stopGroupName.setType("destination");
             stopGroupName.setName(variant.getHeadsign());
             stopGroupName.setNames(Collections.singletonList(variant.getHeadsign()));
-            
+
             List<String> stopGroupStopIds = new LinkedList<String>();
-            for(Stop stop : variant.getStops()) {
+            for (Stop stop : variant.getStops()) {
                 addToReferences(stop);
                 stopGroupStopIds.add(stop.getId().toString());
             }
             stopIds.addAll(stopGroupStopIds);
-            
+
             TransitPolyline variantPolyline = getPolyline(variant.getGeometry());
             polylines.add(variantPolyline);
-            
+
             List<TransitPolyline> stopGroupPolylines = new LinkedList<TransitPolyline>();
             stopGroupPolylines.add(variantPolyline);
-            
+
             TransitStopGroup stopGroup = new TransitStopGroup();
             stopGroup.setId("" + variant.getId());
             stopGroup.setName(stopGroupName);
             stopGroup.setStopIds(stopGroupStopIds);
-            if(includePolylines)
+            if (includePolylines)
                 stopGroup.setPolylines(stopGroupPolylines);
             stopGroup.setSubGroups(Collections.emptyList());
-            
+
             stopGroups.add(stopGroup);
         }
-        
+
         TransitStopGrouping stopGrouping = new TransitStopGrouping();
         stopGrouping.setStopGroups(stopGroups);
         stopGrouping.setType("direction");
         stopGrouping.setOrdered(true);
-        
+
         List<TransitStopGrouping> stopGroupings = new ArrayList<TransitStopGrouping>(variants.size());
         stopGroupings.add(stopGrouping);
-        
+
         TransitStopsForRoute stopsForRoute = new TransitStopsForRoute();
         stopsForRoute.setRouteId(route.getId().toString());
         stopsForRoute.setStopIds(stopIds);
-        if(includePolylines)
+        if (includePolylines)
             stopsForRoute.setPolylines(polylines);
         stopsForRoute.setSituationIds(alertIds);
         stopsForRoute.setStopGroupings(stopGroupings);
-        
+
         addToReferences(route);
         return stopsForRoute;
     }
-    
+
     private final String CACHE_POLYLINE = "polyline";
+
     public TransitPolyline getPolyline(LineString linestring) {
-        if(_cacheService.<LineString, TransitPolyline>containsKey(CACHE_POLYLINE, linestring)) {
+        if (_cacheService.<LineString, TransitPolyline>containsKey(CACHE_POLYLINE, linestring)) {
             return _cacheService.<LineString, TransitPolyline>get(CACHE_POLYLINE, linestring);
         }
-        
+
         TransitPolyline polyline = new TransitPolyline();
         polyline.setLevels("");
         polyline.setLength(linestring.getNumPoints());
         polyline.setPoints(PolylineEncoder.createEncodings(linestring).getPoints());
-        
+
         _cacheService.<LineString, TransitPolyline>put(CACHE_POLYLINE, linestring, polyline);
         return polyline;
     }
-    
+
     public TransitTrip getTrip(Trip trip) {
-        
+
         addToReferences(trip.getRoute());
-        
+
         TransitTrip transitTrip = new TransitTrip();
         transitTrip.setServiceId(trip.getServiceId().toString());
         transitTrip.setBlockId(trip.getBlockId());
@@ -622,35 +627,35 @@ public class TransitResponseBuilder {
         transitTrip.setTripShortName(trip.getTripShortName());
         transitTrip.setBikesAllowed(trip.getBikesAllowed() != 0 ? trip.getBikesAllowed() == 1 : trip.getRoute().getBikesAllowed() == 1);
         transitTrip.setWheelchairAccessible(trip.getWheelchairAccessible() == TableTripPattern.FLAG_WHEELCHAIR_ACCESSIBLE);
-        
+
         return transitTrip;
     }
 
-	public TransitStop getStop(Stop stop) {
-		return getStop(stop, Lists.<String>newArrayList());
-	}
+    public TransitStop getStop(Stop stop) {
+        return getStop(stop, Lists.<String>newArrayList());
+    }
 
     protected TransitStop getStop(Stop stop, List<String> alertIds) {
         String CACHE_STOP = "stop_" + _dialect + "_" + _internalRequest + "_" + alertIds;
-        
+
         List<Route> routes = new ArrayList<Route>();
-        for(AgencyAndId routeId : getRoutesForStop(stop.getId())) {
+        for (AgencyAndId routeId : getRoutesForStop(stop.getId())) {
             Route route = _transitIndexService.getAllRoutes().get(routeId);
             addToReferences(route);
             routes.add(route);
         }
 
-        if(_cacheService.<Stop, TransitStop>containsKey(CACHE_STOP, stop)) {
+        if (_cacheService.<Stop, TransitStop>containsKey(CACHE_STOP, stop)) {
             return _cacheService.<Stop, TransitStop>get(CACHE_STOP, stop);
         }
-        
+
         Collections.sort(routes, ROUTE_COMPARATOR);
-        
+
         List<String> routeIds = new LinkedList<String>();
-        for(Route route : routes) {
+        for (Route route : routes) {
             routeIds.add(route.getId().toString());
         }
-        
+
         TransitStop transitStop = new TransitStop();
         transitStop.setId(stop.getId().toString());
         transitStop.setCode(stop.getCode());
@@ -659,12 +664,12 @@ public class TransitResponseBuilder {
         transitStop.setLon(stop.getLon());
         transitStop.setDirection(stop.getDirection() == null ? "" : stop.getDirection());
         transitStop.setLocationType(stop.getLocationType());
-	    transitStop.setRouteIds(routeIds);
+        transitStop.setRouteIds(routeIds);
 
-        if(_dialect != Dialect.OBA && !StringUtils.isEmpty(stop.getParentStation())) {
+        if (_dialect != Dialect.OBA && !StringUtils.isEmpty(stop.getParentStation())) {
             AgencyAndId parentStationId = new AgencyAndId(stop.getId().getAgencyId(), stop.getParentStation());
             Stop parentStation = _transitIndexService.getAllStops().get(parentStationId);
-            if(parentStation != null) {
+            if (parentStation != null) {
                 addToReferences(parentStation);
                 transitStop.setParentStationId(parentStationId.toString());
             } else {
@@ -672,24 +677,24 @@ public class TransitResponseBuilder {
             }
         }
 
-	    if(_internalRequest && _dialect == Dialect.OTP) {
-		    transitStop.setDescription(stop.getDesc());
-	    }
-        if(_dialect != Dialect.OBA) {
+        if (_internalRequest && _dialect == Dialect.OTP) {
+            transitStop.setDescription(stop.getDesc());
+        }
+        if (_dialect != Dialect.OBA) {
             transitStop.setWheelchairBoarding(1 == stop.getWheelchairBoarding());
         }
-        if(_dialect != Dialect.OBA) {
+        if (_dialect != Dialect.OBA) {
             transitStop.setType(_transitIndexService.getModeForStop(stop.getId()));
         }
-	    if(_dialect == Dialect.MOBILE) {
-		    transitStop.setAlertIds(Lists.newArrayList(alertIds));
-	    }
-	    if(_dialect == Dialect.MOBILE || _dialect == Dialect.OTP) {
-		    transitStop.setStopColorType(getStopColorTypeForStop(transitStop, routes, false));
-	    }
+        if (_dialect == Dialect.MOBILE) {
+            transitStop.setAlertIds(Lists.newArrayList(alertIds));
+        }
+        if (_dialect == Dialect.MOBILE || _dialect == Dialect.OTP) {
+            transitStop.setStopColorType(getStopColorTypeForStop(transitStop, routes, false));
+        }
 
-        if(_dialect == Dialect.OBA) {
-            if(stop.getDirection() != null) {
+        if (_dialect == Dialect.OBA) {
+            if (stop.getDirection() != null) {
                 transitStop.setDirection(getAngleAsDirection(Double.parseDouble(stop.getDirection())));
             }
         }
@@ -698,106 +703,91 @@ public class TransitResponseBuilder {
         return transitStop;
     }
 
-	private String getStopColorTypeForStop(TransitStop transitStop, Collection<Route> routes, boolean incoming) {
-		boolean hasTram = false,
-				hasBus = false,
-				hasTrolleyBus = false,
-				hasFerry = false,
-				hasNightBus = false,
-				hasM1 = false, hasM2 = false, hasM3 = false, hasM4 = false,
-				hasH5 = false, hasH6 = false, hasH7 = false, hasH8 = false, hasH9 = false;
+    private String getStopColorTypeForStop(TransitStop transitStop, Collection<Route> routes, boolean incoming) {
+        boolean hasTram = false,
+                hasBus = false,
+                hasTrolleyBus = false,
+                hasFerry = false,
+                hasNightBus = false,
+                hasM1 = false, hasM2 = false, hasM3 = false, hasM4 = false,
+                hasH5 = false, hasH6 = false, hasH7 = false, hasH8 = false, hasH9 = false;
 
-		if(transitStop.getLocationType() == 2)
-			return "ENTRANCE";
+        if (transitStop.getLocationType() == 2)
+            return "ENTRANCE";
 
-		for(Route route : routes) {
-			if(route.getId().getId().startsWith("VP")
-				|| route.getId().getId().startsWith("TP")
-				|| route.getId().getId().startsWith("HP"))
-			{ // A villamospótló senkit se érdekel?
+        for (Route route : routes) {
+            if (route.getId().getId().startsWith("VP")
+                    || route.getId().getId().startsWith("TP")
+                    || route.getId().getId().startsWith("HP")) { // A villamospótló senkit se érdekel?
                 hasBus = true;
-			}
-			else if(route.getId().getId().startsWith("9")) {
-				hasNightBus = true;
-			}
-			else if(GtfsLibrary.getTraverseMode(route) == TraverseMode.TRAM) {
-				hasTram = true;
-			}
-			else if(GtfsLibrary.getTraverseMode(route) == TraverseMode.TROLLEYBUS) {
-				hasTrolleyBus = true;
-			}
-			else if(GtfsLibrary.getTraverseMode(route) == TraverseMode.FERRY) {
-				hasFerry = true;
-			}
-			else if(GtfsLibrary.getTraverseMode(route) == TraverseMode.BUS) {
-				if(route.getId().getId().startsWith("9")) {
-					hasNightBus = true;
-				} else {
-					hasBus = true;
-				}
-			}
-			else if("M1".equals(route.getShortName())) {
-				hasM1 = true;
-			}
-			else if("M2".equals(route.getShortName())) {
-				hasM2 = true;
-			}
-			else if("M3".equals(route.getShortName())) {
-				hasM3 = true;
-			}
-			else if("M4".equals(route.getShortName())) {
-				hasM4 = true;
-			}
-			else if("H5".equals(route.getShortName())) {
-				hasH5 = true;
-			}
-			else if("H6".equals(route.getShortName())) {
-				hasH6 = true;
-			}
-			else if("H7".equals(route.getShortName())) {
-				hasH7 = true;
-			}
-			else if("H8".equals(route.getShortName())) {
-				hasH8 = true;
-			}
-			else if("H9".equals(route.getShortName())) {
-				hasH9 = true;
-			}
-		}
+            } else if (route.getId().getId().startsWith("9")) {
+                hasNightBus = true;
+            } else if (GtfsLibrary.getTraverseMode(route) == TraverseMode.TRAM) {
+                hasTram = true;
+            } else if (GtfsLibrary.getTraverseMode(route) == TraverseMode.TROLLEYBUS) {
+                hasTrolleyBus = true;
+            } else if (GtfsLibrary.getTraverseMode(route) == TraverseMode.FERRY) {
+                hasFerry = true;
+            } else if (GtfsLibrary.getTraverseMode(route) == TraverseMode.BUS) {
+                if (route.getId().getId().startsWith("9")) {
+                    hasNightBus = true;
+                } else {
+                    hasBus = true;
+                }
+            } else if ("M1".equals(route.getShortName())) {
+                hasM1 = true;
+            } else if ("M2".equals(route.getShortName())) {
+                hasM2 = true;
+            } else if ("M3".equals(route.getShortName())) {
+                hasM3 = true;
+            } else if ("M4".equals(route.getShortName())) {
+                hasM4 = true;
+            } else if ("H5".equals(route.getShortName())) {
+                hasH5 = true;
+            } else if ("H6".equals(route.getShortName())) {
+                hasH6 = true;
+            } else if ("H7".equals(route.getShortName())) {
+                hasH7 = true;
+            } else if ("H8".equals(route.getShortName())) {
+                hasH8 = true;
+            } else if ("H9".equals(route.getShortName())) {
+                hasH9 = true;
+            }
+        }
 
-		String ret = null;
+        String ret = null;
 
-		if(hasM1) ret = append(ret, "M1");
-		if(hasM2) ret = append(ret, "M2");
-		if(hasM3) ret = append(ret, "M3");
-		if(hasM4) ret = append(ret, "M4");
-		if(hasH5) ret = append(ret, "H5");
-		if(hasH6) ret = append(ret, "H6");
-		if(hasH7) ret = append(ret, "H7");
-		if(hasH8) ret = append(ret, "H8");
-		if(hasH9) ret = append(ret, "H9");
-		if(hasFerry) ret = append(ret, "FERRY");
-		if(hasTram) ret = append(ret, "TRAM");
-		if(hasTrolleyBus) ret = append(ret, "TROLLEYBUS");
-		if(hasBus) ret = append(ret, "BUS");
+        if (hasM1) ret = append(ret, "M1");
+        if (hasM2) ret = append(ret, "M2");
+        if (hasM3) ret = append(ret, "M3");
+        if (hasM4) ret = append(ret, "M4");
+        if (hasH5) ret = append(ret, "H5");
+        if (hasH6) ret = append(ret, "H6");
+        if (hasH7) ret = append(ret, "H7");
+        if (hasH8) ret = append(ret, "H8");
+        if (hasH9) ret = append(ret, "H9");
+        if (hasFerry) ret = append(ret, "FERRY");
+        if (hasTram) ret = append(ret, "TRAM");
+        if (hasTrolleyBus) ret = append(ret, "TROLLEYBUS");
+        if (hasBus) ret = append(ret, "BUS");
 
-		if(hasNightBus && ret == null) ret = "NIGHTBUS";
+        if (hasNightBus && ret == null) ret = "NIGHTBUS";
 
-		if(ret == null) {
+        if (ret == null) {
             Collection<Route> incomingRoutes = getAllRoutesForStop(transitStop);
-            if(incomingRoutes.isEmpty() || incoming) {
+            if (incomingRoutes.isEmpty() || incoming) {
                 return "OTHER";
             } else {
                 return getStopColorTypeForStop(transitStop, incomingRoutes, true);
             }
         }
 
-		return ret;
-	}
+        return ret;
+    }
 
     private Collection<Route> getAllRoutesForStop(TransitStop transitStop) {
         List<Route> routes = new ArrayList<Route>();
-        for(AgencyAndId routeId : _transitIndexService.getIncomingRoutesForStop(AgencyAndId.convertFromString(transitStop.getId()))) {
+        for (AgencyAndId routeId : _transitIndexService.getIncomingRoutesForStop(AgencyAndId.convertFromString(transitStop.getId()))) {
             Route route = _transitIndexService.getAllRoutes().get(routeId);
             addToReferences(route);
             routes.add(route);
@@ -806,22 +796,22 @@ public class TransitResponseBuilder {
     }
 
     private String append(String a, String b) {
-		return a == null ? b : a + "-" + b;
-	}
+        return a == null ? b : a + "-" + b;
+    }
 
     public TransitNaturalLanguageString getTranslatedString(TranslatedString translatedString) {
         TransitNaturalLanguageString transitTranslatedString = new TransitNaturalLanguageString();
-        if(translatedString.getTranslation(_locale.toLanguageTag()) != null) {
+        if (translatedString.getTranslation(_locale.toLanguageTag()) != null) {
             transitTranslatedString.setLang(_locale.toLanguageTag());
             transitTranslatedString.setValue(deHTMLize(translatedString.getTranslation(_locale.toLanguageTag())));
-        } else if(translatedString.getTranslation(_locale.getCountry()) != null) {
+        } else if (translatedString.getTranslation(_locale.getCountry()) != null) {
             transitTranslatedString.setLang(_locale.getCountry());
             transitTranslatedString.setValue(deHTMLize(translatedString.getTranslation(_locale.getCountry())));
         } else {
             transitTranslatedString.setLang("");
             transitTranslatedString.setValue(deHTMLize(translatedString.getSomeTranslation()));
         }
-        
+
         return transitTranslatedString;
     }
 
@@ -829,126 +819,126 @@ public class TransitResponseBuilder {
         String ret = htmlString.replace("<br/>", "\n");
         ret = ret.replace("<br>", "\n");
         ret = ret.replace("</p>", "\n");
-        ret = ret.replaceAll("\\<.*?>","");
+        ret = ret.replaceAll("\\<.*?>", "");
         return ret;
     }
-    
-    public TransitAlert getAlert(Alert alert) {
-		final String CACHE_ALERT = "alerts_" + _dialect;
 
-        if(alert.stopIds != null) {
-            for(AgencyAndId stopId : alert.stopIds) {
+    public TransitAlert getAlert(Alert alert) {
+        final String CACHE_ALERT = "alerts_" + _dialect;
+
+        if (alert.stopIds != null) {
+            for (AgencyAndId stopId : alert.stopIds) {
                 Stop stop = _transitIndexService.getAllStops().get(stopId);
-                if(stop != null) {
+                if (stop != null) {
                     addToReferences(stop);
                 }
             }
         }
-        
-        if(alert.routeIds != null) {
-            for(AgencyAndId routeId : alert.routeIds) {
+
+        if (alert.routeIds != null) {
+            for (AgencyAndId routeId : alert.routeIds) {
                 Route route = _transitIndexService.getAllRoutes().get(routeId);
-                if(route != null) {
+                if (route != null) {
                     addToReferences(route);
                 }
             }
         }
-        
-        if(_cacheService.<Alert, TransitAlert>containsKey(CACHE_ALERT, alert)) {
+
+        if (_cacheService.<Alert, TransitAlert>containsKey(CACHE_ALERT, alert)) {
             TransitAlert cached = _cacheService.<Alert, TransitAlert>get(CACHE_ALERT, alert);
-	        if(cached.getTimestamp() >= alert.timestamp) {
-		       return cached;
-	        }
+            if (cached.getTimestamp() >= alert.timestamp) {
+                return cached;
+            }
         }
-        
+
         TransitAlert transitAlert = new TransitAlert();
         transitAlert.setId(alert.alertId.toString());
         transitAlert.setUrl(alert.alertUrl);
         transitAlert.setHeader(alert.alertHeaderText);
         transitAlert.setDescription(alert.alertDescriptionText);
-	    transitAlert.setTimestamp(alert.timestamp);
+        transitAlert.setTimestamp(alert.timestamp);
 
-        if(alert.disableApp) {
+        if (alert.disableApp) {
             transitAlert.setDisableApp(true);
         }
 
-        if(alert.effectiveStartDate != null)
+        if (alert.effectiveStartDate != null)
             transitAlert.setStart(alert.effectiveStartDate.getTime() / 1000);
-        if(alert.effectiveEndDate != null)
+        if (alert.effectiveEndDate != null)
             transitAlert.setEnd(alert.effectiveEndDate.getTime() / 1000);
 
-		if(_dialect == Dialect.MOBILE) {
-			transitAlert.setStartText(alert.bpInternalStartTime);
-			transitAlert.setEndText(alert.bpInternalEndTime);
-		}
+        if (_dialect == Dialect.MOBILE) {
+            transitAlert.setStartText(alert.bpInternalStartTime);
+            transitAlert.setEndText(alert.bpInternalEndTime);
+        }
 
-	    List<String> stopIds = new LinkedList<String>();
-        if(alert.stopIds != null) {
-            for(AgencyAndId stopId : alert.stopIds) {
+        List<String> stopIds = new LinkedList<String>();
+        if (alert.stopIds != null) {
+            for (AgencyAndId stopId : alert.stopIds) {
                 Stop stop = _transitIndexService.getAllStops().get(stopId);
-                if(stop != null) {
+                if (stop != null) {
                     stopIds.add(stopId.toString());
                 }
             }
         }
-	    transitAlert.setStopIds(stopIds);
+        transitAlert.setStopIds(stopIds);
 
-	    List<String> routeIds = new ArrayList<String>();
-        if(alert.routeIds != null) {
+        List<String> routeIds = new ArrayList<String>();
+        if (alert.routeIds != null) {
             List<Route> routes = new ArrayList<Route>(alert.routeIds.size());
-            for(AgencyAndId routeId : alert.routeIds) {
+            for (AgencyAndId routeId : alert.routeIds) {
                 Route route = _transitIndexService.getAllRoutes().get(routeId);
-                if(route != null)
+                if (route != null)
                     routes.add(route);
             }
             Collections.sort(routes, ROUTE_COMPARATOR);
-            
-            for(Route route : routes) {
+
+            for (Route route : routes) {
                 routeIds.add(route.getId().toString());
             }
         }
-	    transitAlert.setRouteIds(routeIds);
+        transitAlert.setRouteIds(routeIds);
 
         _cacheService.<Alert, TransitAlert>put(CACHE_ALERT, alert, transitAlert);
         return transitAlert;
     }
-    
+
     public Collection<TransitTimeRange> getTimeRange(Long start, Long end) {
         TransitTimeRange transitTimeRange = new TransitTimeRange();
         transitTimeRange.setFrom(start);
         transitTimeRange.setTo(end);
         return Collections.singleton(transitTimeRange);
     }
-    
+
     public Collection<TransitSituationAffects> getAffectsFromAlert(TransitAlert alert) {
         Collection<TransitSituationAffects> affects = new HashSet<TransitSituationAffects>();
-        
-        if(alert.getRouteIds() != null) {
-            for(String routeId : alert.getRouteIds()) {
+
+        if (alert.getRouteIds() != null) {
+            for (String routeId : alert.getRouteIds()) {
                 TransitSituationAffects transitSituationAffects = new TransitSituationAffects();
                 transitSituationAffects.setRouteId(routeId);
                 affects.add(transitSituationAffects);
             }
         }
-        
-        if(alert.getStopIds() != null) {
-            for(String stopId : alert.getStopIds()) {
+
+        if (alert.getStopIds() != null) {
+            for (String stopId : alert.getStopIds()) {
                 TransitSituationAffects transitSituationAffects = new TransitSituationAffects();
                 transitSituationAffects.setStopId(stopId);
                 affects.add(transitSituationAffects);
             }
         }
-        
+
         return affects;
     }
-    
+
     public TransitSituation getSituation(TransitAlert transitAlert) {
         String CACHE_SITUATION = "situation-" + _locale.toLanguageTag();
         TransitSituation transitSituation = _cacheService.<TransitAlert, TransitSituation>get(CACHE_SITUATION, transitAlert);
-        if(transitSituation != null) {
+        if (transitSituation != null) {
             return transitSituation;
         }
-        
+
         transitSituation = new TransitSituation();
         transitSituation.setActiveWindows(getTimeRange(transitAlert.getStart(), transitAlert.getEnd()));
         transitSituation.setAllAffects(getAffectsFromAlert(transitAlert));
@@ -961,7 +951,7 @@ public class TransitResponseBuilder {
         transitSituation.setReasons(null);
         transitSituation.setSeverity(null);
         transitSituation.setUrl(getTranslatedString(transitAlert.getUrl()));
-        
+
         _cacheService.<TransitAlert, TransitSituation>put(CACHE_SITUATION, transitAlert, transitSituation);
         return transitSituation;
     }
@@ -973,135 +963,136 @@ public class TransitResponseBuilder {
     }
 
     public <B> TransitEntryWithReferences<B> entity(boolean limitExceeded, B entry) {
-        if(_returnReferences.isEmpty())
+        if (_returnReferences.isEmpty())
             return new TransitEntryWithReferences<B>(limitExceeded, entry, null);
         else
             return new TransitEntryWithReferences<B>(limitExceeded, entry, getDialectReferences());
     }
-    
+
     public <B> TransitListEntryWithReferences<B> list(boolean limitExceeded, List<B> entry) {
-        if(_returnReferences.isEmpty())
+        if (_returnReferences.isEmpty())
             return new TransitListEntryWithReferences<B>(limitExceeded, entry, null);
         else
             return new TransitListEntryWithReferences<B>(limitExceeded, entry, getDialectReferences());
     }
-    
+
     private TransitReferences getDialectReferences() {
-        if(_dialect == Dialect.OTP) {
+        if (_dialect == Dialect.OTP) {
             return _references;
         }
 
-	    if(_dialect == Dialect.MOBILE) {
-		    return new MobileTransitReferences(
-				    _references.getAgencies().values(),
-				    _references.getRoutes().values(),
-				    _references.getStops().values(),
-				    _references.getTrips().values(),
-				    _references.getAlerts().values());
-	    }
-        
+        if (_dialect == Dialect.MOBILE) {
+            return new MobileTransitReferences(
+                    _references.getAgencies().values(),
+                    _references.getRoutes().values(),
+                    _references.getStops().values(),
+                    _references.getTrips().values(),
+                    _references.getAlerts().values());
+        }
+
         Collection<TransitSituation> situations = new ArrayList<TransitSituation>(_references.getAlerts().size());
-        for(TransitAlert transitAlert : _references.getAlerts().values()) {
+        for (TransitAlert transitAlert : _references.getAlerts().values()) {
             situations.add(getSituation(transitAlert));
         }
-        
+
         return new OBATransitReferences(_references.getAgencies().values(),
-                                        _references.getRoutes().values(),
-                                        _references.getStops().values(),
-                                        _references.getTrips().values(),
-                                        situations);
+                _references.getRoutes().values(),
+                _references.getStops().values(),
+                _references.getTrips().values(),
+                situations);
     }
     
     /* REFERENCES */
-    
+
     public void addToReferences(Agency agency) {
-        if(!_returnReferences.contains(References.AGENCIES)) {
+        if (!_returnReferences.contains(References.AGENCIES)) {
             return;
         }
-        if(_references.getAgencies().containsKey(agency.getId())) {
+        if (_references.getAgencies().containsKey(agency.getId())) {
             return;
         }
-        
+
         TransitAgency transitAgency = getAgency(agency);
         _references.addAgency(transitAgency);
     }
 
     public void addToReferences(Route route) {
-        if(!_returnReferences.contains(References.ROUTES)) {
+        if (!_returnReferences.contains(References.ROUTES)) {
             return;
         }
-        if(_references.getRoutes().containsKey(route.getId().toString())) {
+        if (_references.getRoutes().containsKey(route.getId().toString())) {
             return;
         }
-        
+
         TransitRoute transitRoute = getRoute(route);
         _references.addRoute(transitRoute);
     }
 
     public void addToReferences(Trip trip) {
-        if(!_returnReferences.contains(References.TRIPS)) {
+        if (!_returnReferences.contains(References.TRIPS)) {
             return;
         }
-        if(_references.getTrips().containsKey(trip.getId().toString())) {
+        if (_references.getTrips().containsKey(trip.getId().toString())) {
             return;
         }
-        
+
         TransitTrip transitTrip = getTrip(trip);
         _references.addTrip(transitTrip);
     }
 
     public void addToReferences(TransitTrip transitTrip) {
-        if(!_returnReferences.contains(References.TRIPS)) {
+        if (!_returnReferences.contains(References.TRIPS)) {
             return;
         }
-        if(_references.getTrips().containsKey(transitTrip.getId())) {
+        if (_references.getTrips().containsKey(transitTrip.getId())) {
             return;
         }
-        
+
         _references.addTrip(transitTrip);
     }
 
     public void addToReferences(Stop stop) {
-        if(!_returnReferences.contains(References.STOPS)) {
+        if (!_returnReferences.contains(References.STOPS)) {
             return;
         }
-        if(_references.getStops().containsKey(stop.getId().toString())) {
+        if (_references.getStops().containsKey(stop.getId().toString())) {
             return;
         }
-        
+
         TransitStop transitStop = getStop(stop);
         _references.addStop(transitStop);
     }
 
     public void addToReferences(TransitStop transitStop) {
-        if(!_returnReferences.contains(References.STOPS)) {
+        if (!_returnReferences.contains(References.STOPS)) {
             return;
         }
-        if(_references.getStops().containsKey(transitStop.getId())) {
+        if (_references.getStops().containsKey(transitStop.getId())) {
             return;
         }
-        
+
         _references.addStop(transitStop);
     }
 
     public void addToReferences(Alert alert) {
-        if(!_returnReferences.contains(References.ALERTS)) {
+        if (!_returnReferences.contains(References.ALERTS)) {
             return;
         }
-        if(_references.getAlerts().containsKey(alert.alertId.toString())) {
+        if (_references.getAlerts().containsKey(alert.alertId.toString())) {
             return;
         }
-        
+
         TransitAlert transitAlert = getAlert(alert);
         _references.addAlert(transitAlert);
     }
 
     public final static String CACHE_ROUTEIDS_FOR_STOP = "routesIdsForStop";
+
     public final List<AgencyAndId> getRoutesForStop(AgencyAndId stopId) {
-        if(_cacheService.<AgencyAndId, List<AgencyAndId>>containsKey(CACHE_ROUTEIDS_FOR_STOP, stopId)) {
+        if (_cacheService.<AgencyAndId, List<AgencyAndId>>containsKey(CACHE_ROUTEIDS_FOR_STOP, stopId)) {
             return _cacheService.<AgencyAndId, List<AgencyAndId>>get(CACHE_ROUTEIDS_FOR_STOP, stopId);
         }
-        
+
         List<AgencyAndId> routeIds = findRoutesForStop(stopId);
         _cacheService.<AgencyAndId, List<AgencyAndId>>put(CACHE_ROUTEIDS_FOR_STOP, stopId, routeIds);
         return routeIds;
@@ -1113,18 +1104,17 @@ public class TransitResponseBuilder {
         if (edge == null)
             return Collections.emptyList();
 
-        for (Edge e: edge.getToVertex().getOutgoing()) {
+        for (Edge e : edge.getToVertex().getOutgoing()) {
             Trip trip = null;
             if (e instanceof TransitBoardAlight && ((TransitBoardAlight) e).isBoarding()) {
                 TransitBoardAlight board = (TransitBoardAlight) e;
                 trip = board.getPattern().getExemplar();
-            }
-            else if (e instanceof FrequencyBoard) {
+            } else if (e instanceof FrequencyBoard) {
                 FrequencyBoard board = (FrequencyBoard) e;
                 trip = board.getPattern().getTrip();
             }
 
-            if(trip != null /*&& GtfsLibrary.isRouteReferenceTrip(trip)*/)
+            if (trip != null /*&& GtfsLibrary.isRouteReferenceTrip(trip)*/)
                 out.add(trip.getRoute().getId());
         }
 
@@ -1137,17 +1127,18 @@ public class TransitResponseBuilder {
     }
 
     public final static String CACHE_SERVICE_DATE = "serviceDate";
+
     public final String getServiceDateAsString(ServiceDate serviceDate) {
         String serviceDateAsString = _cacheService.<ServiceDate, String>get(CACHE_SERVICE_DATE, serviceDate);
-        if(serviceDateAsString != null) {
+        if (serviceDateAsString != null) {
             return serviceDateAsString;
         }
-        
+
         serviceDateAsString = serviceDate.getAsString();
         _cacheService.<ServiceDate, String>put(CACHE_SERVICE_DATE, serviceDate, serviceDateAsString);
         return serviceDateAsString;
     }
-    
+
     private String getAngleAsDirection(double theta) {
         double t = 360 / 8;
 
@@ -1179,77 +1170,78 @@ public class TransitResponseBuilder {
 
     public final static RouteVariantComparator ROUTE_VARIANT_COMPARATOR = new RouteVariantComparator();
     public final static RouteComparator ROUTE_COMPARATOR = new RouteComparator();
+
     public final static class RouteComparator implements Comparator<Route> {
 
         @Override
         public int compare(Route a, Route b) {
             int ret = 0;
-            
-			ret = this.compareRouteType(a, b);
-            if(ret != 0)
+
+            ret = this.compareRouteType(a, b);
+            if (ret != 0)
                 return ret;
-            
+
             return this.compareRouteShortName(a.getShortName(), b.getShortName());
         }
 
         private int compareRouteType(Route rA, Route rB) {
-	        int a = rA.getType(),
-			    b = rB.getType();
+            int a = rA.getType(),
+                    b = rB.getType();
 
-	        if(a != b) {
-				// metró
-				if(a == 1) return -1;
-				if(b == 1) return  1;
+            if (a != b) {
+                // metró
+                if (a == 1) return -1;
+                if (b == 1) return 1;
 
-				// hév
-				if(a == 2) return -1;
-				if(b == 2) return  1;
+                // hév
+                if (a == 2) return -1;
+                if (b == 2) return 1;
 
-				// hajó
-				if(a == 4) return -1;
-				if(b == 4) return  1;
-	        }
+                // hajó
+                if (a == 4) return -1;
+                if (b == 4) return 1;
+            }
 
-			// a többi itt van szám alapján rendezve
+            // a többi itt van szám alapján rendezve
 
-			// éjszakai
-	        if(a == 3 && b == 3) {
-		        boolean aNight = rA.getId().getId().startsWith("9"),
-		                bNight = rB.getId().getId().startsWith("9");
-		        if( aNight && !bNight) return  1;
-		        if(!aNight &&  bNight) return -1;
-	        }
+            // éjszakai
+            if (a == 3 && b == 3) {
+                boolean aNight = rA.getId().getId().startsWith("9"),
+                        bNight = rB.getId().getId().startsWith("9");
+                if (aNight && !bNight) return 1;
+                if (!aNight && bNight) return -1;
+            }
 
             // többi egyenlő ~ szám alapján rendeződnek
             return 0;
         }
 
         private Pattern pattern = Pattern.compile("^(\\D*)(\\d+)");
-        
+
         private int compareRouteShortName(String a, String b) {
-            
+
             Matcher ma = pattern.matcher(a);
             Matcher mb = pattern.matcher(b);
-            
-            if(ma.find() && mb.find()) {
+
+            if (ma.find() && mb.find()) {
                 int ret;
-                if(ma.group(1).length() > 0 && ma.group(1).length() > 0) {
+                if (ma.group(1).length() > 0 && ma.group(1).length() > 0) {
                     ret = ma.group(1).compareTo(mb.group(1));
-                    if(ret != 0)
+                    if (ret != 0)
                         return ret;
                 } else {
-                    if(ma.group(1).length() > 0) return  1;
-                    if(mb.group(1).length() > 0) return -1;
+                    if (ma.group(1).length() > 0) return 1;
+                    if (mb.group(1).length() > 0) return -1;
                 }
-                
+
                 int na = Integer.parseInt(ma.group(2));
                 int nb = Integer.parseInt(mb.group(2));
-            
+
                 ret = na - nb;
-                if(ret != 0)
+                if (ret != 0)
                     return ret;
             }
-            
+
             return a.compareTo(b);
         }
     }
