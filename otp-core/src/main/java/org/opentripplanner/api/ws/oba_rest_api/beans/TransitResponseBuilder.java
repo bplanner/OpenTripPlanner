@@ -1086,9 +1086,9 @@ public class TransitResponseBuilder {
         _references.addAlert(transitAlert);
     }
 
-    public final static String CACHE_ROUTEIDS_FOR_STOP = "routesIdsForStop";
 
     public final List<AgencyAndId> getRoutesForStop(AgencyAndId stopId) {
+        String CACHE_ROUTEIDS_FOR_STOP = "routesIdsForStop-" + _internalRequest;
         if (_cacheService.<AgencyAndId, List<AgencyAndId>>containsKey(CACHE_ROUTEIDS_FOR_STOP, stopId)) {
             return _cacheService.<AgencyAndId, List<AgencyAndId>>get(CACHE_ROUTEIDS_FOR_STOP, stopId);
         }
@@ -1105,17 +1105,18 @@ public class TransitResponseBuilder {
             return Collections.emptyList();
 
         for (Edge e : edge.getToVertex().getOutgoing()) {
-            Trip trip = null;
+            List<Trip> trips = Collections.emptyList();
             if (e instanceof TransitBoardAlight && ((TransitBoardAlight) e).isBoarding()) {
                 TransitBoardAlight board = (TransitBoardAlight) e;
-                trip = board.getPattern().getExemplar();
+                trips = board.getPattern().getTrips();
             } else if (e instanceof FrequencyBoard) {
                 FrequencyBoard board = (FrequencyBoard) e;
-                trip = board.getPattern().getTrip();
+                trips = Collections.singletonList(board.getPattern().getTrip());
             }
 
-            if (trip != null /*&& GtfsLibrary.isRouteReferenceTrip(trip)*/)
-                out.add(trip.getRoute().getId());
+            for(Trip trip : trips)
+                if (trip != null /* && GtfsLibrary.isRouteReferenceTrip(trip) */ && (_internalRequest || !GtfsLibrary.isAgencyInternal(trip)))
+                    out.add(trip.getRoute().getId());
         }
 
         return new ArrayList<AgencyAndId>(out);

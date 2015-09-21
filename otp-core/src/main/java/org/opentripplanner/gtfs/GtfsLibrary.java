@@ -203,7 +203,7 @@ public class GtfsLibrary {
 
     public static boolean isAgencyInternal(Trip trip) {
         TripExtension tripExtension = trip.getExtension(TripExtension.class);
-        return tripExtension != null && "N".equals(tripExtension.getBkkUtas());
+        return isAgencyInternal(trip.getRoute()) || (tripExtension != null && "N".equals(tripExtension.getBkkUtas())) || isShapeReferenceTrip(trip);
     }
 
     public static boolean isShapeReferenceTrip(Trip trip) {
