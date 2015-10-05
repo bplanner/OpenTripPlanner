@@ -13,15 +13,9 @@
 
 package org.opentripplanner.routing.edgetype.loader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.Point;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.common.geometry.DistanceLibrary;
 import org.opentripplanner.common.geometry.GeometryUtils;
@@ -47,9 +41,14 @@ import org.opentripplanner.routing.vertextype.TransitVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * This class keeps track of all of the edges created during a particular case of network linking
@@ -174,6 +173,9 @@ public class LinkRequest {
                 if (edge.getFromVertex() == first.getToVertex() && edge.getToVertex() == first.getFromVertex()) {
                     second = edge;
                 }
+                else if (sameIntersectionVertex(edge.getFromVertex(), first.getToVertex()) && sameIntersectionVertex(edge.getToVertex(), first.getFromVertex())) {
+                    second = edge;
+                }
             }
             PlainStreetEdge secondClone;
             if (second == null) {
@@ -202,6 +204,10 @@ public class LinkRequest {
         
         // split the (sub)segment edge pair as needed, returning vertices at the split point
         return split(replacement, label, bestPair, coordinate);
+    }
+
+    private boolean sameIntersectionVertex(Vertex toVertex, Vertex fromVertex) {
+        return (toVertex == fromVertex) || (toVertex instanceof IntersectionVertex && fromVertex instanceof IntersectionVertex && toVertex.getCoordinate().equals(fromVertex.getCoordinate()));
     }
 
     /**
