@@ -31,6 +31,7 @@ import javax.ws.rs.QueryParam;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "vehicles-for-location" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEntryWithReferences<TransitVehicle>> {
@@ -77,12 +78,13 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
         List<TransitVehicle> transitVehicles = new LinkedList<TransitVehicle>();
         for(VehicleLocation vehicle : vehicles) {
             if(!TextUtils.isEmpty(query)) {
-                boolean idMatches = matches(vehicle.getVehicleId().toString()),
-                        licencePlaceMatches = matches(vehicle.getLicensePlate()),
-                        driverMatches = isInternalRequest() && matches(vehicle.getDriverName()),
-                        blockMatches = matches(vehicle.getBlockId()),
-                        labelMatches = matches(vehicle.getLabel());
-                if(!(idMatches || licencePlaceMatches || driverMatches || blockMatches || labelMatches))
+                boolean idMatches = same(query, vehicle.getVehicleId().getId()),
+                        licencePlateMatches = matches(3, vehicle.getLicensePlate()),
+                        driverMatches = isInternalRequest() && matches(5, vehicle.getDriverName()),
+                        phoneMatches = isInternalRequest() && same(query, vehicle.getBusPhoneNumber()),
+                        blockMatches = isInternalRequest() && same(query, vehicle.getBlockId()),
+                        labelMatches = matches(5, vehicle.getLabel());
+                if(!(idMatches || licencePlateMatches || driverMatches || phoneMatches || blockMatches || labelMatches))
                     continue;
             }
 
@@ -98,7 +100,11 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
         return responseBuilder.getResponseForList(transitVehicles);
     }
 
-    private boolean matches(String value) {
-        return !TextUtils.isEmpty(value) && value.contains(query);
+    private boolean same(String value1, String value2) {
+        return value1 != null && value2 != null && Objects.equals(value1.toLowerCase(), value2.toLowerCase());
+    }
+
+    private boolean matches(int len, String value) {
+        return !TextUtils.isEmpty(value) && value.length() >= len && value.toLowerCase().contains(query.toLowerCase());
     }
 }

@@ -1115,7 +1115,7 @@ public class TransitResponseBuilder {
             }
 
             for(Trip trip : trips)
-                if (trip != null /* && GtfsLibrary.isRouteReferenceTrip(trip) */ && (_internalRequest || !GtfsLibrary.isAgencyInternal(trip)))
+                if (/* GtfsLibrary.isRouteReferenceTrip(trip) && */ (_internalRequest || !GtfsLibrary.isAgencyInternal(trip)))
                     out.add(trip.getRoute().getId());
         }
 
