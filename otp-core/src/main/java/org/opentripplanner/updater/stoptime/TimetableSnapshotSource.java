@@ -29,6 +29,7 @@ import org.opentripplanner.routing.edgetype.TimetableResolver;
 import org.opentripplanner.routing.edgetype.factory.GTFSPatternHopFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.raptor.RaptorDataService;
+import org.opentripplanner.routing.services.PatchService;
 import org.opentripplanner.routing.services.TransitIndexService;
 import org.opentripplanner.routing.trippattern.TripUpdateList;
 import org.opentripplanner.routing.trippattern.Update;
@@ -146,6 +147,7 @@ public class TimetableSnapshotSource {
 
         LOG.debug("message contains {} trip update blocks", updates.size());
         int uIndex = 0;
+        boolean hasNewAddedTrips = false;
         for (TripUpdateList tripUpdateList : updates) {
             uIndex += 1;
             LOG.debug("trip update block #{} ({} updates) :", uIndex, tripUpdateList.getUpdates().size());
@@ -153,6 +155,7 @@ public class TimetableSnapshotSource {
             
             try {
                 boolean applied = false;
+                boolean newAddedTrip = TripUpdateList.Status.ADDED == tripUpdateList.getStatus() && isNewAddedTrip(tripUpdateList);
                 switch(tripUpdateList.getStatus()) {
                 case ADDED:
                     applied = handleAddedTrip(tripUpdateList);
@@ -172,6 +175,7 @@ public class TimetableSnapshotSource {
                 }
 
                 if(applied) {
+                    hasNewAddedTrips = hasNewAddedTrips || newAddedTrip;
                     appliedBlockCount++;
                  }
             }
@@ -184,6 +188,10 @@ public class TimetableSnapshotSource {
             }
         }
         LOG.debug("end of update message");
+
+        PatchService patchService = graph.getService(PatchService.class);
+        if(patchService != null && hasNewAddedTrips)
+            patchService.reapplyPatches();
         
         // Make a snapshot after each message in anticipation of incoming requests
         // Purge data if necessary (and force new snapshot if anything was purged)
@@ -197,8 +205,12 @@ public class TimetableSnapshotSource {
 
     }
 
+    protected boolean isNewAddedTrip(TripUpdateList tripUpdateList) {
+        return transitIndexService.getTripPatternForTrip(tripUpdateList.getTripId(), tripUpdateList.getServiceDate()) == null;
+    }
+
     protected boolean handleAddedTrip(TripUpdateList tripUpdateList) {
-        if(transitIndexService.getTripPatternForTrip(tripUpdateList.getTripId(), tripUpdateList.getServiceDate()) == null) {
+        if(isNewAddedTrip(tripUpdateList)) {
             addAddedTrip(tripUpdateList);
         }
 
@@ -250,7 +262,7 @@ public class TimetableSnapshotSource {
         hopFactory.augmentServiceIdToNumberService(serviceIdToNumberService);
         transitIndexService.add(result, serviceDate);
 
-        LOG.info("Added trip: {} @ {} to {}", trip.getId(), serviceDate.toString(), tripPattern);
+        LOG.info("Added trip: {}/{} @ {} to {}", trip.getRoute().getId(), trip.getId(), serviceDate.toString(), tripPattern);
 
         if(graph.getService(RaptorDataService.class) != null) {
             RaptorDataService raptorDataService = graph.getService(RaptorDataService.class);

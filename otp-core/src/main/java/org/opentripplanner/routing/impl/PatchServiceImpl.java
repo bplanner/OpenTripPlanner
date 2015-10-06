@@ -102,6 +102,13 @@ public class PatchServiceImpl implements PatchService {
     }
 
     @Override
+    public synchronized void reapplyPatches() {
+        Set<Patch> currentPatches = new HashSet<Patch>(patches.values());
+        for(Patch patch : currentPatches)
+            apply(patch);
+    }
+
+    @Override
     public synchronized void apply(Patch patch) {
         if (graph == null)
             graph = graphService.getGraph();

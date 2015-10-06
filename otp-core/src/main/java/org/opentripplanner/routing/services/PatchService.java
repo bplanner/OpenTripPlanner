@@ -20,17 +20,19 @@ import java.util.Collection;
 import java.util.Set;
 
 public interface PatchService {
-    
+
         Collection<Patch> getAllPatches();
-    
+
 	Collection<Patch> getStopPatches(AgencyAndId stop);
 
 	Collection<Patch> getRoutePatches(AgencyAndId route);
 
     Collection<Patch> getAppPatches(String apiKey, String appVersion);
 
+    void reapplyPatches();
+
 	void apply(Patch patch);
-	
+
 	void expire(Set<String> ids);
 
 	void expireAll();
