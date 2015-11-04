@@ -58,6 +58,10 @@ public abstract class AbstractSearchMethod<T> extends OneBusAwayApiMethod<T> {
                     matched = true;
                 }
                 else if(routeShortName != null
+                        && routeShortName.matches("[mhd]" + query + "(\\D.*|)$")) {
+                    matched = true;
+                }
+                else if(routeShortName != null
                         && query.matches("[mhd]")
                         && routeShortName.startsWith(query)) {
                     matched = true;
