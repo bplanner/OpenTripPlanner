@@ -14,6 +14,7 @@
 package org.opentripplanner.routing.impl;
 
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.patch.Alert;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+@Slf4j
 @Component
 public class PatchServiceImpl implements PatchService {
 
@@ -43,6 +45,7 @@ public class PatchServiceImpl implements PatchService {
     private GraphService graphService;
 
     private HashMap<String, Patch> patches = new HashMap<String, Patch>();
+    private HashMap<String, Patch> appliedPatches = new HashMap<String, Patch>();
     private HashMap<AgencyAndId,List<Patch>> patchesByRoute = new HashMap<AgencyAndId, List<Patch>>();
     private HashMap<AgencyAndId, List<Patch>> patchesByStop = new HashMap<AgencyAndId, List<Patch>>();
     private HashMap<Alert.AppAndVersion, List<Patch>> patchesByApp = new HashMap<Alert.AppAndVersion, List<Patch>>();
@@ -103,9 +106,11 @@ public class PatchServiceImpl implements PatchService {
 
     @Override
     public synchronized void reapplyPatches() {
-        Set<Patch> currentPatches = new HashSet<Patch>(patches.values());
+        log.info("Reapplying patches...");
+        Set<Patch> currentPatches = new HashSet<Patch>(appliedPatches.values());
         for(Patch patch : currentPatches)
             apply(patch);
+        log.info("Reapplied patches");
     }
 
     @Override
@@ -117,7 +122,11 @@ public class PatchServiceImpl implements PatchService {
             expire(patches.get(patch.getId()));
         }
 
-        patch.apply(graph);
+        if(patch.activeDuring(null, System.currentTimeMillis() - 48 * 60 * 60 * 1000, Long.MAX_VALUE)) {
+            patch.apply(graph);
+            appliedPatches.put(patch.getId(), patch);
+        }
+
         patches.put(patch.getId(), patch);
         if (patch instanceof AlertPatch) {
             AlertPatch alertPatch = (AlertPatch) patch;
@@ -190,6 +199,9 @@ public class PatchServiceImpl implements PatchService {
             }
         }
 
-        patch.remove(graph);
+        if(appliedPatches.containsKey(patch.getId())) {
+            patch.remove(graph);
+            appliedPatches.remove(patch.getId());
+        }
     }
 }
