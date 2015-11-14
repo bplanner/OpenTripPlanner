@@ -13,6 +13,7 @@
 
 package org.opentripplanner.standalone;
 
+import org.opentripplanner.api.ws.oba_rest_api.OneBusAwayRequestLogger;
 import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.visualizer.GraphVisualizer;
 import org.slf4j.Logger;
@@ -52,6 +53,12 @@ public class OTPMain {
             LOG.error("Parameter error: {}", pex.getMessage());
             System.exit(1);
         }
+
+        if(params.googleAnalytics) {
+            LOG.warn("Enabling google analytics logging.");
+            OneBusAwayRequestLogger.isEnabled = true;
+        }
+
         /* Wire up and configure graph builder and server based on command line parameters. */
         OTPConfigurator configurator = new OTPConfigurator(params);
         GraphBuilderTask graphBuilder = configurator.builderFromParameters();

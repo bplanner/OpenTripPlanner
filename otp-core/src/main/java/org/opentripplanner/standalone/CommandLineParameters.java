@@ -48,8 +48,7 @@ public class CommandLineParameters {
     boolean verbose;
    
     /* Options for the graph builder sub-task. */
-
-    @Parameter(names = {"-b", "--build"}, validateWith = ReadableDirectory.class, 
+@Parameter(names = {"-b", "--build"}, validateWith = ReadableDirectory.class,
     description = "build graphs at specified paths", variableArity = true)
     public List<File> build;
     
@@ -138,6 +137,10 @@ public class CommandLineParameters {
     @Parameter( names = { "-z", "--visualize"}, 
     description = "open a debugging graph visualizer")
     boolean visualize;
+
+    @Parameter( names = { "-ga"},
+            description = "use google analytics")
+    boolean googleAnalytics;
 
     @Parameter( validateWith = ReadableFile.class, // the remaining parameters in one array
     description = "files") 

@@ -53,6 +53,8 @@ public class OneBusAwayRequestLogger {
     private static final int TIMEOUT_SOCKET = 1000;
     private static final String HOSTNAME = getHostname();
 
+    public static boolean isEnabled = false;
+
     public OneBusAwayRequestLogger() {
     }
 
@@ -70,7 +72,8 @@ public class OneBusAwayRequestLogger {
             if (StringUtils.isNotEmpty(result)) {
                 return result;
             }
-        } catch (UnknownHostException e) { }
+        } catch (UnknownHostException e) {
+        }
 
         String host = System.getenv("COMPUTERNAME");
         if (host != null)
@@ -148,22 +151,28 @@ public class OneBusAwayRequestLogger {
             //timingHit.pageLoadTime(10000 + (int) (now - startTime));
             //timingHit.serverResponseTime(5000 + (int) (now - startTime));
             timingHit.userTimingTime((int) (now - startTime));
-            ga.postAsync(timingHit);
+            if (isEnabled)
+                ga.postAsync(timingHit);
 
             pageHit.customDimention(4, response.getText());
             pageHit.customDimention(5, Integer.toString(response.getCode()));
-            ga.postAsync(pageHit);
+
+            if (isEnabled)
+                ga.postAsync(pageHit);
         }
 
         public void exception(TransitResponse<?> transitResponse, Exception e) {
             ExceptionHit exceptionHit = init(new ExceptionHit());
             exceptionHit.exceptionFatal(true);
             exceptionHit.exceptionDescription(e.getMessage());
-            ga.postAsync(exceptionHit);
+            if (isEnabled)
+                ga.postAsync(exceptionHit);
 
             pageHit.customDimention(4, transitResponse.getText());
             pageHit.customDimention(5, Integer.toString(transitResponse.getCode()));
-            ga.postAsync(pageHit);
+
+            if (isEnabled)
+                ga.postAsync(pageHit);
         }
     }
 
