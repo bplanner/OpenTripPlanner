@@ -20,6 +20,7 @@ import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferences;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
+import org.opentripplanner.api.ws.oba_rest_api.beans.TransitTrip;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitVehicle;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.updater.vehicle_location.VehicleLocation;
@@ -91,7 +92,9 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
             if(vehicle.getTripId() != null) {
                 Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
                 if(isInternalRequest() || !GtfsLibrary.isAgencyInternal(trip)) {
-                    responseBuilder.addToReferences(getTrip(vehicle.getTripId(), vehicle.getServiceDate()));
+                    TransitTrip transitTrip = getTransitTrip(vehicle, vehicle.getTripId(), vehicle.getServiceDate());
+                    if(transitTrip != null)
+                        responseBuilder.addToReferences(transitTrip);
                 }
             }
             transitVehicles.add(responseBuilder.getVehicle(vehicle));

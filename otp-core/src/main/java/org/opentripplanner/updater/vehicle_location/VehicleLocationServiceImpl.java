@@ -64,10 +64,11 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
 
 	@Override
 	public List<VehicleLocation> getForRoute(AgencyAndId routeId) {
-		List<VehicleLocation> locations = _vehicleLocationsByRoute.get(routeId);
-		if (locations == null)
+		List<VehicleLocation> vehicles = _vehicleLocationsByRoute.get(routeId);
+		if (vehicles == null)
 			return Collections.emptyList();
-		return locations;
+
+		return Lists.newArrayList(Iterables.filter(vehicles, VEHICLE_FILTER));
 	}
 
 	@Override

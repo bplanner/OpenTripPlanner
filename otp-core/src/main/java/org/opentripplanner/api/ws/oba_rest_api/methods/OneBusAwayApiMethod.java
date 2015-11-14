@@ -863,35 +863,22 @@ public abstract class OneBusAwayApiMethod<T> {
         List<TransitVehicle> transitVehicles = new ArrayList<TransitVehicle>(vehicles.size());
         for(VehicleLocation vehicle : vehicles) {
             TransitTrip transitTrip = null;
-            
+
             if(vehicle.getTripId() != null) {
                 Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
-                TableTripPattern pattern = transitIndexService.getTripPatternForTrip(trip.getId(), vehicle.getServiceDate());
-
                 if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
                     continue;
                 }
 
-                if(pattern != null && (internalRequest || !GtfsLibrary.isAgencyInternal(trip))) {
-                    Timetable timetable = getTimetable(pattern, vehicle.getServiceDate());
-
-                    if(timetable != null) {
-                        int tripIndex = timetable.getTripIndex(trip.getId());
-                        if(vehicle.getStopId() != null) {
-                            Stop vehicleStop = transitIndexService.getAllStops().get(vehicle.getStopId());
-                            responseBuilder.addToReferences(vehicleStop);
-                        }
-
-                        transitTrip = responseBuilder.getTrip(trip);
-                        transitTrip.setWheelchairAccessible(timetable.isWheelchairAccessible(tripIndex));
-                        responseBuilder.addToReferences(transitTrip);
-                    }
-                }
+                transitTrip = getTransitTrip(vehicle, vehicle.getTripId(), vehicle.getServiceDate());
             }
 
             TransitVehicle transitVehicle = responseBuilder.getVehicle(vehicle);
-            if(transitTrip != null)
+            if(transitTrip != null) {
                 transitVehicle.setTripId(transitTrip.getId());
+                responseBuilder.addToReferences(transitTrip);
+            }
+
             transitVehicles.add(transitVehicle);
         }
         
@@ -900,40 +887,47 @@ public abstract class OneBusAwayApiMethod<T> {
 
 	protected TransitVehicle getTransitVehicleForTrip(VehicleLocationService vehicleLocationService, AgencyAndId tripId, ServiceDate serviceDate) {
 		VehicleLocation vehicle = vehicleLocationService.getForTrip(tripId);
-		TransitTrip transitTrip = null;
-
 		if(vehicle == null) {
 			return null;
 		}
 
-		if(serviceDate != null && !serviceDate.equals(vehicle.getServiceDate()))
-			return null;
+		if(serviceDate != null && !serviceDate.equals(vehicle.getServiceDate())) {
+            return null;
+        }
 
-		Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
-		TableTripPattern pattern = transitIndexService.getTripPatternForTrip(trip.getId(), vehicle.getServiceDate());
-
-		if(pattern != null) {
-			Timetable timetable = getTimetable(pattern, vehicle.getServiceDate());
-
-			if(timetable != null) {
-				int tripIndex = timetable.getTripIndex(trip.getId());
-				if(vehicle.getStopId() != null) {
-					Stop vehicleStop = transitIndexService.getAllStops().get(vehicle.getStopId());
-					responseBuilder.addToReferences(vehicleStop);
-				}
-
-				transitTrip = responseBuilder.getTrip(trip);
-				transitTrip.setWheelchairAccessible(timetable.isWheelchairAccessible(tripIndex));
-				responseBuilder.addToReferences(transitTrip);
-			}
-		}
-
+        TransitTrip transitTrip = getTransitTrip(vehicle, vehicle.getTripId(), vehicle.getServiceDate());
 		TransitVehicle transitVehicle = responseBuilder.getVehicle(vehicle);
-		if(transitTrip != null)
-			transitVehicle.setTripId(transitTrip.getId());
+		if(transitTrip != null) {
+            transitVehicle.setTripId(transitTrip.getId());
+            responseBuilder.addToReferences(transitTrip);
+        }
 
 		return transitVehicle;
 	}
+
+    protected TransitTrip getTransitTrip(VehicleLocation vehicleLocation, AgencyAndId tripId, ServiceDate serviceDate) {
+        Trip trip = getTrip(tripId, serviceDate);
+        TableTripPattern pattern = transitIndexService.getTripPatternForTrip(tripId, serviceDate);
+
+        if(pattern != null && (internalRequest || !GtfsLibrary.isAgencyInternal(trip))) {
+            Timetable timetable = getTimetable(pattern, serviceDate);
+
+            if(timetable != null) {
+                int tripIndex = timetable.getTripIndex(trip.getId());
+                if(vehicleLocation.getStopId() != null) {
+                    Stop vehicleStop = transitIndexService.getAllStops().get(vehicleLocation.getStopId());
+                    responseBuilder.addToReferences(vehicleStop);
+                }
+
+                TransitTrip transitTrip = responseBuilder.getTrip(trip);
+                transitTrip.setWheelchairAccessible(timetable.isWheelchairAccessible(tripIndex));
+
+                return transitTrip;
+            }
+        }
+
+        return null;
+    }
 
     protected List<String> getAlertsForStop(AgencyAndId stopId, RoutingRequest options, long startTime, long endTime) {
 
@@ -941,37 +935,17 @@ public abstract class OneBusAwayApiMethod<T> {
 
         PatchService patchService = graph.getService(PatchService.class);
         if(patchService != null) {
-            Collection<Patch> patches = patchService.getStopPatches(stopId);
-            for(Patch patch : patches) {
-                if(patch.activeDuring(options, startTime, endTime)) {
-                    Alert alert = patch.getAlert();
-                    if(alert != null) {
-                        responseBuilder.addToReferences(alert);
-                        alertIds.add(alert.alertId.toString());
-                    }
-                }
-            }
+            collectAndAddActivePatches(patchService.getStopPatches(stopId), options, startTime, endTime, alertIds);
         }
 
         return new ArrayList<String>(alertIds);
     }
 
     protected List<String> getAlertsForRoute(AgencyAndId routeId, RoutingRequest options, long startTime, long endTime) {
-
         Set<String> alertIds = new HashSet<String>();
-
         PatchService patchService = graph.getService(PatchService.class);
         if(patchService != null) {
-            Collection<Patch> patches = patchService.getRoutePatches(routeId);
-            for(Patch patch : patches) {
-                if(patch.activeDuring(options, startTime, endTime)) {
-                    Alert alert = patch.getAlert();
-                    if(alert != null) {
-                        responseBuilder.addToReferences(alert);
-                        alertIds.add(alert.alertId.toString());
-                    }
-                }
-            }
+            collectAndAddActivePatches(patchService.getRoutePatches(routeId), options, startTime, endTime, alertIds);
         }
 
         return new ArrayList<String>(alertIds);
@@ -982,20 +956,26 @@ public abstract class OneBusAwayApiMethod<T> {
     }
 
     protected List<String> getAlertsForApp(RoutingRequest options, long startTime, long endTime) {
-        LinkedList<String> alertIds = new LinkedList<String>();
+        Set<String> alertIds = new HashSet<String>();
+
         PatchService patchService = graph.getService(PatchService.class);
         if(patchService != null && apiKey != null) {
-            for(Patch patch : patchService.getAppPatches(apiKey, appVersion)) {
-                if(patch.activeDuring(options, startTime, endTime)) {
-                    Alert alert = patch.getAlert();
-                    if(alert != null) {
-                        responseBuilder.addToReferences(alert);
-                        alertIds.add(alert.alertId.toString());
-                    }
+            collectAndAddActivePatches(patchService.getAppPatches(apiKey, appVersion), options, startTime, endTime, alertIds);
+        }
+
+        return new ArrayList<String>(alertIds);
+    }
+
+    private void collectAndAddActivePatches(Collection<Patch> patches, RoutingRequest options, long startTime, long endTime, Set<String> alertIds) {
+        for(Patch patch : patches) {
+            if(patch.activeDuring(options, startTime, endTime)) {
+                Alert alert = patch.getAlert();
+                if(alert != null) {
+                    responseBuilder.addToReferences(alert);
+                    alertIds.add(alert.alertId.toString());
                 }
             }
         }
-        return alertIds;
     }
 
     protected final static String CACHE_NEARBY_STOPS = "nearbyStops";
