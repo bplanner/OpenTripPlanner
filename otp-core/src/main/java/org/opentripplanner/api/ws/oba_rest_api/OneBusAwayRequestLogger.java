@@ -221,8 +221,7 @@ public class OneBusAwayRequestLogger {
             config.setUserAgent("OTP-API");
             config.setMaxThreads(THREADS);
             config.setGatherStats(true);
-            config.setUseHttps(true);
-            config.setHttpsUrl("https://www.google-analytics.com/collect");
+            config.setUseHttps(false);
             return config;
         }
     }
