@@ -21,10 +21,14 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
+import org.opentripplanner.routing.edgetype.Timetable;
+import org.opentripplanner.routing.edgetype.TimetableResolver;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.services.TransitIndexService;
+import org.opentripplanner.routing.trippattern.CanceledTripTimes;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.PollingGraphUpdater;
+import org.opentripplanner.updater.stoptime.TimetableSnapshotSource;
 import org.opentripplanner.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +110,7 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
                 graph.putService(VehicleLocationService.class, vehicleLocationService);
             }
 
+            TimetableResolver timetableResolver = getTimetableResolver();
             List<VehicleLocation> validLocations = new LinkedList<VehicleLocation>();
             for(VehicleLocation location : updatedLocations) {
                 TableTripPattern tripPattern = null;
@@ -118,6 +123,13 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
                     if(tripPattern == null) {
                         LOG.warn("Location update references an unknown trip (zeroed): " + location);
                         location.setTripId(null);
+                    } else {
+                        Timetable timetable = getTimetable(timetableResolver, tripPattern, location.getServiceDate());
+                        int tripIndex = timetable.getTripIndex(location.getTripId());
+                        if (tripIndex < 0 || timetable.getTripTimes(tripIndex) instanceof CanceledTripTimes) {
+                            LOG.warn("Location update references a canceled trip (zeroed): " + location);
+                            location.setTripId(null);
+                        }
                     }
                 }
                 Stop stop = null;
@@ -143,7 +155,7 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
             LOG.error("Error reading gtfs-realtime feed from " + url, e);
         }
     }
-    
+
     public List<VehicleLocation> getVehicleLocationUpdates() throws Exception {
         GtfsRealtime.FeedMessage feed = getFeedMessage();
         if (feed == null)
@@ -299,6 +311,23 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
             }
         }
         return feed;
+    }
+
+    protected Timetable getTimetable(TimetableResolver timetableResolver, TableTripPattern pattern, ServiceDate serviceDate) {
+        if(timetableResolver != null) {
+            return timetableResolver.resolve(pattern, serviceDate);
+        } else {
+            return pattern.getScheduledTimetable();
+        }
+    }
+
+    private TimetableResolver getTimetableResolver() {
+        TimetableSnapshotSource timetableSnapshotSource = graph.getTimetableSnapshotSource();
+        if(timetableSnapshotSource == null) {
+            return null;
+        }
+
+        return timetableSnapshotSource.getTimetableSnapshot();
     }
 
     @Override
