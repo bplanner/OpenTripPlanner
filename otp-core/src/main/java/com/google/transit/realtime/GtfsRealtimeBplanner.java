@@ -11,6 +11,7 @@ public final class GtfsRealtimeBplanner {
     registry.add(com.google.transit.realtime.GtfsRealtimeBplanner.bpTrip);
     registry.add(com.google.transit.realtime.GtfsRealtimeBplanner.bpAlert);
     registry.add(com.google.transit.realtime.GtfsRealtimeBplanner.bpSelector);
+    registry.add(com.google.transit.realtime.GtfsRealtimeBplanner.bpHeader);
   }
   public interface BPAlertOrBuilder extends
       // @@protoc_insertion_point(interface_extends:BPAlert)
@@ -1511,6 +1512,34 @@ public final class GtfsRealtimeBplanner {
      * <code>optional int32 stop_distance_percent = 6;</code>
      */
     int getStopDistancePercent();
+
+    /**
+     * <code>optional string driver_id = 7;</code>
+     */
+    boolean hasDriverId();
+    /**
+     * <code>optional string driver_id = 7;</code>
+     */
+    java.lang.String getDriverId();
+    /**
+     * <code>optional string driver_id = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getDriverIdBytes();
+
+    /**
+     * <code>optional string vehicle_model = 8;</code>
+     */
+    boolean hasVehicleModel();
+    /**
+     * <code>optional string vehicle_model = 8;</code>
+     */
+    java.lang.String getVehicleModel();
+    /**
+     * <code>optional string vehicle_model = 8;</code>
+     */
+    com.google.protobuf.ByteString
+        getVehicleModelBytes();
   }
   /**
    * Protobuf type {@code BPVehicleDescriptor}
@@ -1594,6 +1623,18 @@ public final class GtfsRealtimeBplanner {
             case 48: {
               bitField0_ |= 0x00000020;
               stopDistancePercent_ = input.readInt32();
+              break;
+            }
+            case 58: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000040;
+              driverId_ = bs;
+              break;
+            }
+            case 66: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000080;
+              vehicleModel_ = bs;
               break;
             }
           }
@@ -1780,6 +1821,90 @@ public final class GtfsRealtimeBplanner {
       return stopDistancePercent_;
     }
 
+    public static final int DRIVER_ID_FIELD_NUMBER = 7;
+    private java.lang.Object driverId_;
+    /**
+     * <code>optional string driver_id = 7;</code>
+     */
+    public boolean hasDriverId() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional string driver_id = 7;</code>
+     */
+    public java.lang.String getDriverId() {
+      java.lang.Object ref = driverId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          driverId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string driver_id = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDriverIdBytes() {
+      java.lang.Object ref = driverId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        driverId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int VEHICLE_MODEL_FIELD_NUMBER = 8;
+    private java.lang.Object vehicleModel_;
+    /**
+     * <code>optional string vehicle_model = 8;</code>
+     */
+    public boolean hasVehicleModel() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional string vehicle_model = 8;</code>
+     */
+    public java.lang.String getVehicleModel() {
+      java.lang.Object ref = vehicleModel_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          vehicleModel_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string vehicle_model = 8;</code>
+     */
+    public com.google.protobuf.ByteString
+        getVehicleModelBytes() {
+      java.lang.Object ref = vehicleModel_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        vehicleModel_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       deviated_ = false;
       wheelchairAccessible_ = 0;
@@ -1787,6 +1912,8 @@ public final class GtfsRealtimeBplanner {
       phoneNumber_ = "";
       driverName_ = "";
       stopDistancePercent_ = 0;
+      driverId_ = "";
+      vehicleModel_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1818,6 +1945,12 @@ public final class GtfsRealtimeBplanner {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeInt32(6, stopDistancePercent_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(7, getDriverIdBytes());
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, getVehicleModelBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1851,6 +1984,14 @@ public final class GtfsRealtimeBplanner {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(6, stopDistancePercent_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, getDriverIdBytes());
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, getVehicleModelBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1981,6 +2122,10 @@ public final class GtfsRealtimeBplanner {
         bitField0_ = (bitField0_ & ~0x00000010);
         stopDistancePercent_ = 0;
         bitField0_ = (bitField0_ & ~0x00000020);
+        driverId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000040);
+        vehicleModel_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -2033,6 +2178,14 @@ public final class GtfsRealtimeBplanner {
           to_bitField0_ |= 0x00000020;
         }
         result.stopDistancePercent_ = stopDistancePercent_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.driverId_ = driverId_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.vehicleModel_ = vehicleModel_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2070,6 +2223,16 @@ public final class GtfsRealtimeBplanner {
         }
         if (other.hasStopDistancePercent()) {
           setStopDistancePercent(other.getStopDistancePercent());
+        }
+        if (other.hasDriverId()) {
+          bitField0_ |= 0x00000040;
+          driverId_ = other.driverId_;
+          onChanged();
+        }
+        if (other.hasVehicleModel()) {
+          bitField0_ |= 0x00000080;
+          vehicleModel_ = other.vehicleModel_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2374,6 +2537,158 @@ public final class GtfsRealtimeBplanner {
       public Builder clearStopDistancePercent() {
         bitField0_ = (bitField0_ & ~0x00000020);
         stopDistancePercent_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object driverId_ = "";
+      /**
+       * <code>optional string driver_id = 7;</code>
+       */
+      public boolean hasDriverId() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional string driver_id = 7;</code>
+       */
+      public java.lang.String getDriverId() {
+        java.lang.Object ref = driverId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            driverId_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string driver_id = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDriverIdBytes() {
+        java.lang.Object ref = driverId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          driverId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string driver_id = 7;</code>
+       */
+      public Builder setDriverId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        driverId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string driver_id = 7;</code>
+       */
+      public Builder clearDriverId() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        driverId_ = getDefaultInstance().getDriverId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string driver_id = 7;</code>
+       */
+      public Builder setDriverIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        driverId_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object vehicleModel_ = "";
+      /**
+       * <code>optional string vehicle_model = 8;</code>
+       */
+      public boolean hasVehicleModel() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional string vehicle_model = 8;</code>
+       */
+      public java.lang.String getVehicleModel() {
+        java.lang.Object ref = vehicleModel_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            vehicleModel_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string vehicle_model = 8;</code>
+       */
+      public com.google.protobuf.ByteString
+          getVehicleModelBytes() {
+        java.lang.Object ref = vehicleModel_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          vehicleModel_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string vehicle_model = 8;</code>
+       */
+      public Builder setVehicleModel(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        vehicleModel_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string vehicle_model = 8;</code>
+       */
+      public Builder clearVehicleModel() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        vehicleModel_ = getDefaultInstance().getVehicleModel();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string vehicle_model = 8;</code>
+       */
+      public Builder setVehicleModelBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        vehicleModel_ = value;
         onChanged();
         return this;
       }
@@ -2865,6 +3180,482 @@ public final class GtfsRealtimeBplanner {
     // @@protoc_insertion_point(class_scope:BPTripDescriptor)
   }
 
+  public interface BPFeedHeaderOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:BPFeedHeader)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional string feed_version = 1;</code>
+     */
+    boolean hasFeedVersion();
+    /**
+     * <code>optional string feed_version = 1;</code>
+     */
+    java.lang.String getFeedVersion();
+    /**
+     * <code>optional string feed_version = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getFeedVersionBytes();
+  }
+  /**
+   * Protobuf type {@code BPFeedHeader}
+   */
+  public static final class BPFeedHeader extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:BPFeedHeader)
+      BPFeedHeaderOrBuilder {
+    // Use BPFeedHeader.newBuilder() to construct.
+    private BPFeedHeader(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private BPFeedHeader(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final BPFeedHeader defaultInstance;
+    public static BPFeedHeader getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public BPFeedHeader getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private BPFeedHeader(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              feedVersion_ = bs;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.google.transit.realtime.GtfsRealtimeBplanner.internal_static_BPFeedHeader_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.google.transit.realtime.GtfsRealtimeBplanner.internal_static_BPFeedHeader_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.class, com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<BPFeedHeader> PARSER =
+        new com.google.protobuf.AbstractParser<BPFeedHeader>() {
+      public BPFeedHeader parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new BPFeedHeader(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<BPFeedHeader> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int FEED_VERSION_FIELD_NUMBER = 1;
+    private java.lang.Object feedVersion_;
+    /**
+     * <code>optional string feed_version = 1;</code>
+     */
+    public boolean hasFeedVersion() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string feed_version = 1;</code>
+     */
+    public java.lang.String getFeedVersion() {
+      java.lang.Object ref = feedVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          feedVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string feed_version = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getFeedVersionBytes() {
+      java.lang.Object ref = feedVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        feedVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      feedVersion_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getFeedVersionBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getFeedVersionBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code BPFeedHeader}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:BPFeedHeader)
+        com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeaderOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.google.transit.realtime.GtfsRealtimeBplanner.internal_static_BPFeedHeader_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.google.transit.realtime.GtfsRealtimeBplanner.internal_static_BPFeedHeader_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.class, com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.Builder.class);
+      }
+
+      // Construct using com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        feedVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.google.transit.realtime.GtfsRealtimeBplanner.internal_static_BPFeedHeader_descriptor;
+      }
+
+      public com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader getDefaultInstanceForType() {
+        return com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.getDefaultInstance();
+      }
+
+      public com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader build() {
+        com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader buildPartial() {
+        com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader result = new com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.feedVersion_ = feedVersion_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader) {
+          return mergeFrom((com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader other) {
+        if (other == com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.getDefaultInstance()) return this;
+        if (other.hasFeedVersion()) {
+          bitField0_ |= 0x00000001;
+          feedVersion_ = other.feedVersion_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object feedVersion_ = "";
+      /**
+       * <code>optional string feed_version = 1;</code>
+       */
+      public boolean hasFeedVersion() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string feed_version = 1;</code>
+       */
+      public java.lang.String getFeedVersion() {
+        java.lang.Object ref = feedVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            feedVersion_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string feed_version = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getFeedVersionBytes() {
+        java.lang.Object ref = feedVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          feedVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string feed_version = 1;</code>
+       */
+      public Builder setFeedVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        feedVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string feed_version = 1;</code>
+       */
+      public Builder clearFeedVersion() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        feedVersion_ = getDefaultInstance().getFeedVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string feed_version = 1;</code>
+       */
+      public Builder setFeedVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        feedVersion_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:BPFeedHeader)
+    }
+
+    static {
+      defaultInstance = new BPFeedHeader(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:BPFeedHeader)
+  }
+
   public static final int BP_VEHICLE_FIELD_NUMBER = 1060;
   /**
    * <code>extend .transit_realtime.VehicleDescriptor { ... }</code>
@@ -2909,6 +3700,17 @@ public final class GtfsRealtimeBplanner {
           .newFileScopedGeneratedExtension(
         com.google.transit.realtime.GtfsRealtimeBplanner.BPEntitySelector.class,
         com.google.transit.realtime.GtfsRealtimeBplanner.BPEntitySelector.getDefaultInstance());
+  public static final int BP_HEADER_FIELD_NUMBER = 1060;
+  /**
+   * <code>extend .transit_realtime.FeedHeader { ... }</code>
+   */
+  public static final
+    com.google.protobuf.GeneratedMessage.GeneratedExtension<
+      com.google.transit.realtime.GtfsRealtime.FeedHeader,
+      com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader> bpHeader = com.google.protobuf.GeneratedMessage
+          .newFileScopedGeneratedExtension(
+        com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.class,
+        com.google.transit.realtime.GtfsRealtimeBplanner.BPFeedHeader.getDefaultInstance());
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_BPAlert_descriptor;
   private static
@@ -2929,6 +3731,11 @@ public final class GtfsRealtimeBplanner {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_BPTripDescriptor_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_BPFeedHeader_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_BPFeedHeader_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2944,20 +3751,24 @@ public final class GtfsRealtimeBplanner {
       "String\022;\n\017internalEndText\030\002 \001(\0132\".transi" +
       "t_realtime.TranslatedString\022\023\n\013disable_a" +
       "pp\030\003 \001(\010\"8\n\020BPEntitySelector\022\017\n\007api_key\030" +
-      "\001 \001(\t\022\023\n\013app_version\030\002 \001(\t\"\260\001\n\023BPVehicle" +
+      "\001 \001(\t\022\023\n\013app_version\030\002 \001(\t\"\332\001\n\023BPVehicle" +
       "Descriptor\022\027\n\010deviated\030\001 \001(\010:\005false\022 \n\025w" +
       "heelchair_accessible\030\002 \001(\005:\0010\022\024\n\014vehicle" +
       "_type\030\003 \001(\005\022\024\n\014phone_number\030\004 \001(\t\022\023\n\013dri",
       "ver_name\030\005 \001(\t\022\035\n\025stop_distance_percent\030" +
-      "\006 \001(\005\"$\n\020BPTripDescriptor\022\020\n\010block_id\030\001 " +
+      "\006 \001(\005\022\021\n\tdriver_id\030\007 \001(\t\022\025\n\rvehicle_mode" +
+      "l\030\010 \001(\t\"$\n\020BPTripDescriptor\022\020\n\010block_id\030" +
+      "\001 \001(\t\"$\n\014BPFeedHeader\022\024\n\014feed_version\030\001 " +
       "\001(\t:N\n\nbp_vehicle\022#.transit_realtime.Veh" +
       "icleDescriptor\030\244\010 \001(\0132\024.BPVehicleDescrip" +
       "tor:E\n\007bp_trip\022 .transit_realtime.TripDe" +
       "scriptor\030\244\010 \001(\0132\021.BPTripDescriptor:4\n\010bp" +
       "_alert\022\027.transit_realtime.Alert\030\244\010 \001(\0132\010" +
-      ".BPAlert:I\n\013bp_selector\022 .transit_realti" +
+      ".BPAlert:I\n\013bp_selector\022 .transit_realti",
       "me.EntitySelector\030\244\010 \001(\0132\021.BPEntitySelec" +
-      "torB\035\n\033com.google.transit.realtime"
+      "tor:?\n\tbp_header\022\034.transit_realtime.Feed" +
+      "Header\030\244\010 \001(\0132\r.BPFeedHeaderB\035\n\033com.goog" +
+      "le.transit.realtime"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2989,17 +3800,24 @@ public final class GtfsRealtimeBplanner {
     internal_static_BPVehicleDescriptor_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_BPVehicleDescriptor_descriptor,
-        new java.lang.String[] { "Deviated", "WheelchairAccessible", "VehicleType", "PhoneNumber", "DriverName", "StopDistancePercent", });
+        new java.lang.String[] { "Deviated", "WheelchairAccessible", "VehicleType", "PhoneNumber", "DriverName", "StopDistancePercent", "DriverId", "VehicleModel", });
     internal_static_BPTripDescriptor_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_BPTripDescriptor_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_BPTripDescriptor_descriptor,
         new java.lang.String[] { "BlockId", });
+    internal_static_BPFeedHeader_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_BPFeedHeader_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_BPFeedHeader_descriptor,
+        new java.lang.String[] { "FeedVersion", });
     bpVehicle.internalInit(descriptor.getExtensions().get(0));
     bpTrip.internalInit(descriptor.getExtensions().get(1));
     bpAlert.internalInit(descriptor.getExtensions().get(2));
     bpSelector.internalInit(descriptor.getExtensions().get(3));
+    bpHeader.internalInit(descriptor.getExtensions().get(4));
     com.google.transit.realtime.GtfsRealtime.getDescriptor();
   }
 
