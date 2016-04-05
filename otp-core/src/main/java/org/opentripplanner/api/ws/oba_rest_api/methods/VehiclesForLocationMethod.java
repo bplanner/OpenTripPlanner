@@ -84,8 +84,8 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
                         driverMatches = isInternalRequest() && matches(5, vehicle.getDriverName()),
                         phoneMatches = isInternalRequest() && same(query, vehicle.getBusPhoneNumber()),
                         blockMatches = isInternalRequest() && same(query, vehicle.getBlockId()),
-                        labelMatches = matches(5, vehicle.getLabel());
-                if(!(idMatches || licencePlateMatches || driverMatches || phoneMatches || blockMatches || labelMatches))
+                        modelMatches = matches(5, vehicle.getVehicleModel());
+                if(!(idMatches || licencePlateMatches || driverMatches || phoneMatches || blockMatches || modelMatches))
                     continue;
             }
 

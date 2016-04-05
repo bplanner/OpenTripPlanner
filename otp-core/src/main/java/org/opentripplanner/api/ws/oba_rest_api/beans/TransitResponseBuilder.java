@@ -366,6 +366,7 @@ public class TransitResponseBuilder {
         transitVehicle.setServiceDate(getServiceDateAsString(vehicle.getServiceDate()));
         transitVehicle.setCongestionLevel(vehicle.getCongestionLevel());
         transitVehicle.setStopDistancePercent(vehicle.getStopDistancePercent());
+        transitVehicle.setVehicleModel(vehicle.getVehicleModel());
 
         if (_internalRequest) {
             transitVehicle.setBusPhoneNumber(vehicle.getBusPhoneNumber());

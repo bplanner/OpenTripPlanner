@@ -29,13 +29,13 @@ public class VehicleLocation {
     public VehicleLocation(AgencyAndId routeId, Float lat, Float lon,
             AgencyAndId tripId, Float bearing, Status status, AgencyAndId stopId, ServiceDate serviceDate) {
         this(0l, null, routeId, lat, lon, tripId, null, null, bearing, status,
-                stopId, null, serviceDate, null, false, null, null, null, null, null);
+                stopId, null, serviceDate, null, false, null, null, null, null, null, null);
     }
     
     public VehicleLocation(long timestamp, AgencyAndId vehicleId, AgencyAndId routeId, Float lat, Float lon,
-            AgencyAndId tripId, String licensePlate, String label, Float bearing, Status status,
-            AgencyAndId stopId, Integer stopSequence, ServiceDate serviceDate, CongestionLevel congestionLevel, boolean deviated,
-            String busPhoneNumber, String driverName, Integer vehicleRouteType, String blockId, Integer stopDistancePercent) {
+                           AgencyAndId tripId, String licensePlate, String label, Float bearing, Status status,
+                           AgencyAndId stopId, Integer stopSequence, ServiceDate serviceDate, CongestionLevel congestionLevel, boolean deviated,
+                           String busPhoneNumber, String driverName, Integer vehicleRouteType, String blockId, Integer stopDistancePercent, String vehicleModel) {
         this.timestamp = timestamp;
         this.vehicleId = vehicleId;
         this.latitude = lat;
@@ -56,6 +56,7 @@ public class VehicleLocation {
 	    this.vehicleRouteType = vehicleRouteType;
 	    this.blockId = blockId;
 	    this.stopDistancePercent = stopDistancePercent;
+        this.vehicleModel = vehicleModel;
     }
     
     public Coordinate getCoordinate() {
@@ -136,4 +137,8 @@ public class VehicleLocation {
         UNKNOWN,
         CONGESTION
     }
+
+    @Getter
+    private String vehicleModel;
+
 }
