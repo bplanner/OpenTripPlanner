@@ -38,7 +38,7 @@ public class StopMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<T
         AgencyAndId stopId = parseAgencyAndId(stopIdString);
         Stop stop = transitIndexService.getAllStops().get(stopId);
         if(stop == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
         }
         return responseBuilder.getResponseForStop(stop);
     }

@@ -39,7 +39,7 @@ public class AgencyMethod extends OneBusAwayApiMethod<TransitEntryWithReferences
     protected TransitResponse<TransitEntryWithReferences<TransitAgency>> getResponse() {
         Agency agency = transitIndexService.getAgency(agencyId);
         if(agency == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, apiVersion.getApiVersion());
         
         return responseBuilder.getResponseForAgency(agency);
     }

@@ -48,11 +48,11 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
         AgencyAndId routeId = parseAgencyAndId(id);
         Route route = transitIndexService.getAllRoutes().get(routeId);
         if(route == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.", apiVersion.getApiVersion());
         }
 
         if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(route)) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.", apiVersion.getApiVersion());
         }
 
         ServiceDate serviceDate = new ServiceDate();
@@ -60,7 +60,7 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
             try {
                 serviceDate = ServiceDate.parseString(date);
             } catch (ParseException ex) {
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.", apiVersion.getApiVersion());
             }
         }
         
@@ -68,7 +68,7 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
         long endTime = serviceDate.next().getAsDate(graph.getTimeZone()).getTime() / 1000 - 1;
         
         if(!graph.transitFeedCovers(startTime) && graph.transitFeedCovers(endTime)) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.", apiVersion.getApiVersion());
         }
         
         RoutingRequest options = makeTraverseOptions(startTime, routerId);

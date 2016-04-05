@@ -46,13 +46,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TransitResponseBuilder {
-    private final static int API_VERSION = 2;
 
     public static javax.ws.rs.core.Response getWsResponse(TransitResponse<?> entity) {
         return javax.ws.rs.core.Response.ok()
                 .entity(entity)
                 .header("X-BKK-Status", entity.getStatus())
                 .build();
+    }
+
+    @AllArgsConstructor
+    public static class ApiVersionWrapper {
+
+        @Getter
+        private final ApiVersion apiVersion;
+
+        public static ApiVersionWrapper valueOf(String value) {
+            return new ApiVersionWrapper(ApiVersion.of(value));
+        }
     }
 
     @AllArgsConstructor
@@ -92,6 +102,40 @@ public class TransitResponseBuilder {
         }
     }
 
+    public enum ApiVersion {
+        V2("2", 2),
+        V3("3", 3);
+
+        public final String version;
+        public final int number;
+
+        ApiVersion(String version, int number) {
+            this.version = version;
+            this.number = number;
+        }
+
+        public boolean isBefore(ApiVersion other) {
+            for(ApiVersion v : values()) {
+                if(v == other) {
+                    return false;
+                }
+                if(v == this) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static ApiVersion of(String s) {
+            for(ApiVersion v : values()) {
+                if(v.version.equals(s)) {
+                    return v;
+                }
+            }
+            return V2;
+        }
+    }
+
     public enum Dialect {
         OTP, OBA, MOBILE
     }
@@ -109,8 +153,11 @@ public class TransitResponseBuilder {
     private EnumSet<References> _returnReferences;
     private boolean _internalRequest;
 
-    public TransitResponseBuilder(Graph graph, EnumSet<References> references, Dialect dialect, boolean internalRequest, HttpRequestContext httpRequestContext) {
+    private ApiVersion _version;
+
+    public TransitResponseBuilder(Graph graph, ApiVersion apiVersion, EnumSet<References> references, Dialect dialect, boolean internalRequest, HttpRequestContext httpRequestContext) {
         _dialect = dialect;
+        _version = apiVersion;
         _returnReferences = references;
         _transitIndexService = graph.getService(TransitIndexService.class);
         _cacheService = graph.getService(OneBusAwayApiCacheService.class);
@@ -236,7 +283,7 @@ public class TransitResponseBuilder {
     }
 
     public TransitResponse<TransitEntryWithReferences<Response>> getResponseForErrorTripPlan(TransitResponse.Status status, Response plan) {
-        return getFailResponse(status, plan.getError().getMsg(), entity(plan));
+        return getFailResponse(status, plan.getError().getMsg(), entity(plan), _version);
     }
 
     public <B> TransitResponse<TransitListEntryWithReferences<B>> getResponseForList(List<B> list) {
@@ -248,27 +295,27 @@ public class TransitResponseBuilder {
     }
 
     private <T> TransitResponse<T> getOkResponse(T data) {
-        return new TransitResponse<T>(API_VERSION, TransitResponse.Status.OK, "OK", data);
+        return new TransitResponse<T>(_version.number, TransitResponse.Status.OK, "OK", data);
     }
 
-    public static <T> TransitResponse<T> getFailResponse() {
-        return getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An unknown error occured...");
+    public static <T> TransitResponse<T> getFailResponse(ApiVersion apiVersion) {
+        return getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An unknown error occured...", apiVersion);
     }
 
-    public static <T> TransitResponse<T> getFailResponse(String text) {
-        return new TransitResponse<T>(API_VERSION, TransitResponse.Status.UNKNOWN_ERROR, text, null);
+    public static <T> TransitResponse<T> getFailResponse(String text, ApiVersion apiVersion) {
+        return new TransitResponse<T>(apiVersion.number, TransitResponse.Status.UNKNOWN_ERROR, text, null);
     }
 
-    public static <T> TransitResponse<T> getFailResponse(TransitResponse.Status status) {
-        return new TransitResponse<T>(API_VERSION, status, null, null);
+    public static <T> TransitResponse<T> getFailResponse(TransitResponse.Status status, ApiVersion apiVersion) {
+        return new TransitResponse<T>(apiVersion.number, status, null, null);
     }
 
-    public static <T> TransitResponse<T> getFailResponse(TransitResponse.Status status, String text) {
-        return new TransitResponse<T>(API_VERSION, status, text, null);
+    public static <T> TransitResponse<T> getFailResponse(TransitResponse.Status status, String text, ApiVersion apiVersion) {
+        return new TransitResponse<T>(apiVersion.number, status, text, null);
     }
 
-    public static <T> TransitResponse<T> getFailResponse(TransitResponse.Status status, String text, T data) {
-        return new TransitResponse<T>(API_VERSION, status, text, data);
+    public static <T> TransitResponse<T> getFailResponse(TransitResponse.Status status, String text, T data, ApiVersion apiVersion) {
+        return new TransitResponse<T>(apiVersion.number, status, text, data);
     }
     
     /* SUB-RESPONSE */
@@ -361,12 +408,17 @@ public class TransitResponseBuilder {
         transitVehicle.setLocation(new TransitCoordinatePoint(vehicle.getLatitude(), vehicle.getLongitude()));
         transitVehicle.setLastUpdateTime(vehicle.getTimestamp());
         transitVehicle.setLicensePlate(vehicle.getLicensePlate());
-        transitVehicle.setLabel(vehicle.getLabel());
         transitVehicle.setDeviated(vehicle.isDeviated());
         transitVehicle.setServiceDate(getServiceDateAsString(vehicle.getServiceDate()));
         transitVehicle.setCongestionLevel(vehicle.getCongestionLevel());
         transitVehicle.setStopDistancePercent(vehicle.getStopDistancePercent());
-        transitVehicle.setVehicleModel(vehicle.getVehicleModel());
+
+        if(_version.isBefore(ApiVersion.V3)) {
+            transitVehicle.setLabel(vehicle.getVehicleModel());
+        } else {
+            transitVehicle.setLabel(vehicle.getLabel());
+            transitVehicle.setModel(vehicle.getVehicleModel());
+        }
 
         if (_internalRequest) {
             transitVehicle.setBusPhoneNumber(vehicle.getBusPhoneNumber());

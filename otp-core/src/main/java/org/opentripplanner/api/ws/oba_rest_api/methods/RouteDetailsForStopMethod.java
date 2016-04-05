@@ -38,7 +38,7 @@ public class RouteDetailsForStopMethod extends OneBusAwayApiMethod<TransitListEn
         AgencyAndId stopId = parseAgencyAndId(id);
         Stop stop =  transitIndexService.getAllStops().get(stopId);
         if(stop == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
         }
 
         List<TransitRoute> routes = new LinkedList<TransitRoute>();

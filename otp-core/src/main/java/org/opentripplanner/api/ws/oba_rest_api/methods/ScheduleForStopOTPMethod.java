@@ -63,14 +63,14 @@ public class ScheduleForStopOTPMethod extends OneBusAwayApiMethod<TransitEntryWi
             try {
                 serviceDate = ServiceDate.parseString(date);
             } catch (ParseException ex) {
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.", apiVersion.getApiVersion());
             }
         }
 
         AgencyAndId stopId = parseAgencyAndId(id);
         Stop stop = transitIndexService.getAllStops().get(stopId);
         if (stop == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
 
         long startTime = serviceDate.getAsDate(graph.getTimeZone()).getTime() / 1000;
         long endTime = serviceDate.next().getAsDate(graph.getTimeZone()).getTime() / 1000 - 1;
@@ -169,7 +169,7 @@ public class ScheduleForStopOTPMethod extends OneBusAwayApiMethod<TransitEntryWi
         if (options == null) {
             responseBuilder.addToReferences(stop);
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.",
-                    responseBuilder.entity(schedule));
+                    responseBuilder.entity(schedule), apiVersion.getApiVersion());
         }
 
         return responseBuilder.getResponseForStopSchedule(stop, schedule);

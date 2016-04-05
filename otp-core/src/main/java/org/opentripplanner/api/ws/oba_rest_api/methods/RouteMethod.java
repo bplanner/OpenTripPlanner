@@ -38,7 +38,7 @@ public class RouteMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<
         AgencyAndId routeId = parseAgencyAndId(routeIdString);
         Route route = transitIndexService.getAllRoutes().get(routeId);
         if(route == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.", apiVersion.getApiVersion());
         }
         return responseBuilder.getResponseForRoute(route);
     }

@@ -47,7 +47,7 @@ public class StopsForRouteMethod extends OneBusAwayApiMethod<TransitEntryWithRef
         AgencyAndId routeId = parseAgencyAndId(routeIdString);
         Route route = transitIndexService.getAllRoutes().get(routeId);
         if(route == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.", apiVersion.getApiVersion());
         }
         
         ServiceDate serviceDate = new ServiceDate();
@@ -55,7 +55,7 @@ public class StopsForRouteMethod extends OneBusAwayApiMethod<TransitEntryWithRef
             try {
                 serviceDate = ServiceDate.parseString(date);
             } catch (ParseException ex) {
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.", apiVersion.getApiVersion());
             }
         }
         
@@ -63,7 +63,7 @@ public class StopsForRouteMethod extends OneBusAwayApiMethod<TransitEntryWithRef
         long endTime = serviceDate.next().getAsDate(graph.getTimeZone()).getTime() / 1000 - 1;
         
         if(!graph.transitFeedCovers(startTime) && graph.transitFeedCovers(endTime)) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.", apiVersion.getApiVersion());
         }
         
         RoutingRequest options = makeTraverseOptions(startTime, routerId);

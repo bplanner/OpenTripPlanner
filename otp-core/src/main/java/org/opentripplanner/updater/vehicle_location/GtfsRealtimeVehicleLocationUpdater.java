@@ -42,9 +42,9 @@ import java.util.prefs.Preferences;
 
 /**
  * GTFS-RT vehicle locations updater
- * 
+ * <p>
  * Usage example ('myalert' name is an example) in file 'Graph.properties':
- * 
+ * <p>
  * <pre>
  * myalert.type = vehicle-locations
  * myalert.frequencySec = 60
@@ -53,20 +53,21 @@ import java.util.prefs.Preferences;
  * </pre>
  */
 public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(GtfsRealtimeVehicleLocationUpdater.class);
 
     protected ExtensionRegistry extensionRegistry = ExtensionRegistry.newInstance();
+
     {
-		GtfsRealtimeBplanner.registerAllExtensions(extensionRegistry);
+        GtfsRealtimeBplanner.registerAllExtensions(extensionRegistry);
     }
 
     private Graph graph;
-    
+
     private Long lastTimestamp = Long.MIN_VALUE;
-    
+
     private HttpUtils httpUtils;
-    
+
     @Setter
     private String url;
 
@@ -85,7 +86,7 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
         this.defaultAgencyId = preferences.get("defaultAgencyId", null);
         LOG.info("Creating real-time vehicle location updater running every {} seconds : {}",
                 getFrequencySec(), url);
-        
+
         this.graph = graph;
     }
 
@@ -98,12 +99,12 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
     protected void runPolling() throws Exception {
         try {
             List<VehicleLocation> updatedLocations = getVehicleLocationUpdates();
-            if(updatedLocations == null)
+            if (updatedLocations == null)
                 return;
 
             TransitIndexService transitIndexService = graph.getService(TransitIndexService.class);
             VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
-            if(vehicleLocationService == null) {
+            if (vehicleLocationService == null) {
                 VehicleLocationServiceImpl impl = new VehicleLocationServiceImpl();
                 impl.setGraph(graph);
                 vehicleLocationService = impl;
@@ -112,15 +113,15 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
 
             TimetableResolver timetableResolver = getTimetableResolver();
             List<VehicleLocation> validLocations = new LinkedList<VehicleLocation>();
-            for(VehicleLocation location : updatedLocations) {
+            for (VehicleLocation location : updatedLocations) {
                 TableTripPattern tripPattern = null;
-                if(location.getRouteId() != null && !transitIndexService.getAllRoutes().containsKey(location.getRouteId())) {
+                if (location.getRouteId() != null && !transitIndexService.getAllRoutes().containsKey(location.getRouteId())) {
                     LOG.warn("Location update references an unknown route (zeroed): " + location);
                     location.setRouteId(null);
                 }
-                if(location.getTripId() != null) {
+                if (location.getTripId() != null) {
                     tripPattern = transitIndexService.getTripPatternForTrip(location.getTripId(), location.getServiceDate());
-                    if(tripPattern == null) {
+                    if (tripPattern == null) {
                         LOG.warn("Location update references an unknown trip (zeroed): " + location);
                         location.setTripId(null);
                     } else {
@@ -129,19 +130,21 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
                         if (tripIndex < 0 || timetable.getTripTimes(tripIndex) instanceof CanceledTripTimes) {
                             LOG.warn("Location update references a canceled trip (zeroed): " + location);
                             location.setTripId(null);
+                        } else {
+                            location.setLabel(tripPattern.getTrip(location.getTripId()).getTripHeadsign());
                         }
                     }
                 }
                 Stop stop = null;
-                if(location.getStopId() != null) {
+                if (location.getStopId() != null) {
                     stop = transitIndexService.getAllStops().get(location.getStopId());
-                    if(stop == null) {
+                    if (stop == null) {
                         LOG.warn("Location update references an unknown stop (zeroed): " + location);
                         location.setStopId(null);
                         location.setTripId(null);
                     }
                 }
-                if(stop != null && tripPattern != null && !tripPattern.getStops().contains(stop)) {
+                if (stop != null && tripPattern != null && !tripPattern.getStops().contains(stop)) {
                     LOG.warn("Location update references an unknown stop for trip (zeroed): " + location);
                     location.setStopId(null);
                     location.setTripId(null);
@@ -160,111 +163,111 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
         GtfsRealtime.FeedMessage feed = getFeedMessage();
         if (feed == null)
             return null;
-        
+
         GtfsRealtime.FeedHeader header = feed.getHeader();
-        if(header.hasIncrementality() && header.getIncrementality() == GtfsRealtime.FeedHeader.Incrementality.DIFFERENTIAL) {
+        if (header.hasIncrementality() && header.getIncrementality() == GtfsRealtime.FeedHeader.Incrementality.DIFFERENTIAL) {
             LOG.error("DIFFERENTIAL GTFS-rt updates are not supported.");
             return null;
         }
-        
+
         long feedTimestamp = header.getTimestamp();
-        if(feedTimestamp <= lastTimestamp) {
+        if (feedTimestamp <= lastTimestamp) {
             LOG.info("Ignoring feed with an old timestamp.");
             return null;
         }
-        
+
         List<VehicleLocation> ret = new LinkedList<VehicleLocation>();
         for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
-            if(!entity.hasVehicle()) {
+            if (!entity.hasVehicle()) {
                 continue;
             }
-            
+
             GtfsRealtime.VehiclePosition vehiclePosition = entity.getVehicle();
             GtfsRealtime.TripDescriptor descriptor = vehiclePosition.getTrip();
 
             AgencyAndId tripId = null;
             ServiceDate serviceDate = new ServiceDate();
-            if(descriptor.hasTripId()) {
+            if (descriptor.hasTripId()) {
                 tripId = new AgencyAndId(defaultAgencyId, descriptor.getTripId());
                 if (descriptor.hasStartDate()) {
                     try {
-                       serviceDate = ServiceDate.parseString(descriptor.getStartDate());
+                        serviceDate = ServiceDate.parseString(descriptor.getStartDate());
                     } catch (ParseException e) {
                         LOG.warn("Failed to parse startDate in gtfs-rt feed: \n{}", entity);
                         continue;
                     }
                 }
             }
-            
+
             AgencyAndId routeId = null;
-            if(descriptor.hasRouteId()) {
+            if (descriptor.hasRouteId()) {
                 routeId = new AgencyAndId(defaultAgencyId, descriptor.getRouteId());
             }
 
-	        String blockId = null;
-			GtfsRealtimeBplanner.BPTripDescriptor bpDescriptor = descriptor.getExtension(GtfsRealtimeBplanner.bpTrip);
-	        if(bpDescriptor != null && bpDescriptor.hasBlockId()) {
-		        blockId = bpDescriptor.getBlockId();
-	        }
-            
+            String blockId = null;
+            GtfsRealtimeBplanner.BPTripDescriptor bpDescriptor = descriptor.getExtension(GtfsRealtimeBplanner.bpTrip);
+            if (bpDescriptor != null && bpDescriptor.hasBlockId()) {
+                blockId = bpDescriptor.getBlockId();
+            }
+
             Integer stopSequence = null;
             AgencyAndId stopId = null;
-            if(vehiclePosition.hasCurrentStopSequence())
+            if (vehiclePosition.hasCurrentStopSequence())
                 stopSequence = vehiclePosition.getCurrentStopSequence();
-            if(vehiclePosition.hasStopId())
+            if (vehiclePosition.hasStopId())
                 stopId = new AgencyAndId(defaultAgencyId, vehiclePosition.getStopId());
 
             boolean deviated = false;
             AgencyAndId vehicleId = new AgencyAndId(defaultAgencyId, entity.getId());
             String licensePlate = null, label = null;
-	        String driverName = null;
-	        String busPhoneNumber = null;
-	        Integer vehicleRouteType = null;
-	        Integer stopDistancePercent = null;
+            String driverName = null;
+            String busPhoneNumber = null;
+            Integer vehicleRouteType = null;
+            Integer stopDistancePercent = null;
             String vehicleModel = null;
-            if(vehiclePosition.hasVehicle()) {
+            if (vehiclePosition.hasVehicle()) {
                 GtfsRealtime.VehicleDescriptor vehicle = vehiclePosition.getVehicle();
-				GtfsRealtimeBplanner.BPVehicleDescriptor bpVehicle = vehicle.getExtension(GtfsRealtimeBplanner.bpVehicle);
+                GtfsRealtimeBplanner.BPVehicleDescriptor bpVehicle = vehicle.getExtension(GtfsRealtimeBplanner.bpVehicle);
 
-                if(vehicle.hasLicensePlate())
+                if (vehicle.hasLicensePlate())
                     licensePlate = vehicle.getLicensePlate();
-                if(vehicle.hasLabel())
+                if (vehicle.hasLabel())
                     label = vehicle.getLabel();
-                if(vehicle.hasId())
+                if (vehicle.hasId())
                     vehicleId = new AgencyAndId(defaultAgencyId, vehicle.getId());
 
-                if(bpVehicle != null && bpVehicle.hasDeviated())
+                if (bpVehicle != null && bpVehicle.hasDeviated())
                     deviated = bpVehicle.getDeviated();
-	            if(bpVehicle != null && bpVehicle.hasPhoneNumber())
-		            busPhoneNumber = bpVehicle.getPhoneNumber();
-	            if(bpVehicle != null && bpVehicle.hasDriverName())
-		            driverName = bpVehicle.getDriverName();
-	            if(bpVehicle != null && bpVehicle.hasVehicleType())
-		            vehicleRouteType = bpVehicle.getVehicleType();
-	            if(bpVehicle != null && bpVehicle.hasStopDistancePercent())
-		            stopDistancePercent = bpVehicle.getStopDistancePercent();
-                if(bpVehicle != null && bpVehicle.hasVehicleModel())
+                if (bpVehicle != null && bpVehicle.hasPhoneNumber())
+                    busPhoneNumber = bpVehicle.getPhoneNumber();
+                if (bpVehicle != null && bpVehicle.hasDriverName())
+                    driverName = bpVehicle.getDriverName();
+                if (bpVehicle != null && bpVehicle.hasVehicleType())
+                    vehicleRouteType = bpVehicle.getVehicleType();
+                if (bpVehicle != null && bpVehicle.hasStopDistancePercent())
+                    stopDistancePercent = bpVehicle.getStopDistancePercent();
+                if (bpVehicle != null && bpVehicle.hasVehicleModel())
                     vehicleModel = bpVehicle.getVehicleModel();
 
             }
-            
+
             long timestamp = feed.getHeader().getTimestamp();
-            if(vehiclePosition.hasTimestamp())
+            if (vehiclePosition.hasTimestamp())
                 timestamp = vehiclePosition.getTimestamp();
-            
+
             Float lat = null, lon = null;
             Float bearing = null;
-            if(vehiclePosition.hasPosition()) {
+            if (vehiclePosition.hasPosition()) {
                 GtfsRealtime.Position position = vehiclePosition.getPosition();
                 lat = position.getLatitude();
                 lon = position.getLongitude();
-                if(position.hasBearing())
+                if (position.hasBearing())
                     bearing = position.getBearing();
             }
-            
+
             VehicleLocation.Status status = null;
-            if(vehiclePosition.hasCurrentStatus()) {
-                switch(vehiclePosition.getCurrentStatus()) {
+            if (vehiclePosition.hasCurrentStatus()) {
+                switch (vehiclePosition.getCurrentStatus()) {
                     case INCOMING_AT:
                         status = VehicleLocation.Status.INCOMING_AT;
                         break;
@@ -276,10 +279,10 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
                         break;
                 }
             }
-            
+
             VehicleLocation.CongestionLevel congestionLevel = null;
-            if(vehiclePosition.hasCongestionLevel()) {
-                switch(vehiclePosition.getCongestionLevel()) {
+            if (vehiclePosition.hasCongestionLevel()) {
+                switch (vehiclePosition.getCongestionLevel()) {
                     case CONGESTION:
                         congestionLevel = VehicleLocation.CongestionLevel.CONGESTION;
                         break;
@@ -288,29 +291,29 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
                         break;
                 }
             }
-            
+
             VehicleLocation vehicleLocation = new VehicleLocation(timestamp, vehicleId, routeId, lat, lon,
                     tripId, licensePlate, label, bearing, status, stopId, stopSequence, serviceDate, congestionLevel,
                     deviated, busPhoneNumber, driverName, vehicleRouteType, blockId, stopDistancePercent, vehicleModel);
             ret.add(vehicleLocation);
         }
-        
+
         lastTimestamp = feedTimestamp;
-        
+
         return ret;
     }
-    
+
     protected GtfsRealtime.FeedMessage getFeedMessage() throws Exception {
         GtfsRealtime.FeedMessage feed = null;
         InputStream is = null;
         try {
             is = httpUtils.getData(url, lastTimestamp);
-            if(is != null)
+            if (is != null)
                 feed = GtfsRealtime.FeedMessage.PARSER.parseFrom(is, extensionRegistry);
         } catch (IOException e) {
             LOG.warn("Failed to parse gtfs-rt feed from " + url + ":", e);
         } finally {
-            if(is != null) {
+            if (is != null) {
                 is.close();
             }
         }
@@ -318,7 +321,7 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
     }
 
     protected Timetable getTimetable(TimetableResolver timetableResolver, TableTripPattern pattern, ServiceDate serviceDate) {
-        if(timetableResolver != null) {
+        if (timetableResolver != null) {
             return timetableResolver.resolve(pattern, serviceDate);
         } else {
             return pattern.getScheduledTimetable();
@@ -327,7 +330,7 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
 
     private TimetableResolver getTimetableResolver() {
         TimetableSnapshotSource timetableSnapshotSource = graph.getTimetableSnapshotSource();
-        if(timetableSnapshotSource == null) {
+        if (timetableSnapshotSource == null) {
             return null;
         }
 

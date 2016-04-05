@@ -35,7 +35,7 @@ public class AlertMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<
 	protected TransitResponse<TransitEntryWithReferences<TransitAlert>> getResponse() {
 		Alert alert = getAlert(parseAgencyAndId(alertId));
 		if(alert == null)
-			return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND);
+			return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, apiVersion.getApiVersion());
 
 		return responseBuilder.getResponseForAlert(alert);
 	}

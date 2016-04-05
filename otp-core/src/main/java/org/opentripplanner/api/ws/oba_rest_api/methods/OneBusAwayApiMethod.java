@@ -168,7 +168,7 @@ public abstract class OneBusAwayApiMethod<T> {
     /**
      * The API version of the request. Currently only version 2 is supported.
      */
-    @QueryParam("version") @DefaultValue("2") protected String apiVersion;
+    @QueryParam("version") @DefaultValue("2") protected TransitResponseBuilder.ApiVersionWrapper apiVersion;
 
     /**
      * API response dialect, provided int the URL. May be either <code>otp</code> or <code>oba</code>.
@@ -228,27 +228,27 @@ public abstract class OneBusAwayApiMethod<T> {
 
         graph = getGraph(routerId);
         if(graph == null) {
-            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH));
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH, apiVersion.getApiVersion()));
         }
 
         transitIndexService = graph.getService(TransitIndexService.class);
         if (transitIndexService == null) {
-            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE));
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE, apiVersion.getApiVersion()));
         }
 
         createDefaultServices();
 
-        responseBuilder = new TransitResponseBuilder(graph, references.getReferences(), dialect.getDialect(), internalRequest, httpContext.getRequest());
+        responseBuilder = new TransitResponseBuilder(graph, apiVersion.getApiVersion(), references.getReferences(), dialect.getDialect(), internalRequest, httpContext.getRequest());
 
         TransitResponse<T> transitResponse;
         try {
             transitResponse = getResponse();
             logRequest.finishRequest(transitResponse);
         } catch (TransitTimesException e) {
-            transitResponse = TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES);
+            transitResponse = TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, apiVersion.getApiVersion());
             logRequest.exception(transitResponse, e);
         } catch (Exception e) {
-            transitResponse = TransitResponseBuilder.getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occured: " + e.getClass().getName());
+            transitResponse = TransitResponseBuilder.getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occured: " + e.getClass().getName(), apiVersion.getApiVersion());
             logRequest.exception(transitResponse, e);
             LOG.warn("Unhandled exception: ", e);
         }

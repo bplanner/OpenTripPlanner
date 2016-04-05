@@ -50,7 +50,7 @@ public class TripsForLocationMethod extends OneBusAwayApiMethod<TransitListEntry
 
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
 
         Collection<VehicleLocation> vehicles;
         

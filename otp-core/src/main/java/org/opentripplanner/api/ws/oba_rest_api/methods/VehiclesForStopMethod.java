@@ -37,16 +37,16 @@ public class VehiclesForStopMethod extends OneBusAwayApiMethod<TransitListEntryW
     protected TransitResponse<TransitListEntryWithReferences<TransitVehicle>> getResponse() {
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
         
         if(ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED, apiVersion.getApiVersion());
         }
 
         AgencyAndId stopId = parseAgencyAndId(id);
         Stop stop = transitIndexService.getAllStops().get(stopId);
         if(stop == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stop.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stop.", apiVersion.getApiVersion());
         
         responseBuilder.addToReferences(stop);
 

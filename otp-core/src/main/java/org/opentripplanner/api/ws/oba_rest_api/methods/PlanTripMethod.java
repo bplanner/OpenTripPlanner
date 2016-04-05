@@ -87,6 +87,7 @@ public class PlanTripMethod extends RoutingResource {
     }
 
 	@QueryParam("key") protected String apiKey;
+    @QueryParam("version") @DefaultValue("2") protected TransitResponseBuilder.ApiVersionWrapper apiVersion;
 	@QueryParam("appVersion") protected String appVersion;
 	@PathParam("dialect") protected TransitResponseBuilder.DialectWrapper dialect;
     @QueryParam("routerId") private String routerId;
@@ -105,12 +106,12 @@ public class PlanTripMethod extends RoutingResource {
 
         Graph graph = getGraph(routerId);
         if(graph == null) {
-            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH));
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_NO_GRAPH, apiVersion.getApiVersion()));
         }
 
         TransitIndexService transitIndexService = graph.getService(TransitIndexService.class);
         if (transitIndexService == null) {
-            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE));
+            return TransitResponseBuilder.getWsResponse(TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TRANSIT_INDEX_SERVICE, apiVersion.getApiVersion()));
         }
         
         OneBusAwayApiCacheService cacheService = graph.getService(OneBusAwayApiCacheService.class);
@@ -141,7 +142,7 @@ public class PlanTripMethod extends RoutingResource {
         }
 
         try {
-            TransitResponseBuilder builder = new TransitResponseBuilder(graph, references.getReferences(), dialect.getDialect(), internalRequest, httpContext.getRequest());
+            TransitResponseBuilder builder = new TransitResponseBuilder(graph, apiVersion.getApiVersion(), references.getReferences(), dialect.getDialect(), internalRequest, httpContext.getRequest());
             Response plan = getItineraries();
             
             if(plan.getError() != null) {
@@ -202,7 +203,7 @@ public class PlanTripMethod extends RoutingResource {
             return TransitResponseBuilder.getWsResponse(response);
         } catch(Exception e) {
             LOG.warn("Trip Planning Exception: ", e);
-            TransitResponse<TransitEntryWithReferences<Response>> response = TransitResponseBuilder.<TransitEntryWithReferences<Response>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occurred: " + e.getClass().getName());
+            TransitResponse<TransitEntryWithReferences<Response>> response = TransitResponseBuilder.<TransitEntryWithReferences<Response>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "An error occurred: " + e.getClass().getName(), apiVersion.getApiVersion());
             logRequest.exception(response, e);
             return TransitResponseBuilder.getWsResponse(response);
         }

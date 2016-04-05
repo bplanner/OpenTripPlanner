@@ -48,11 +48,11 @@ public class TripsForRouteMethod extends OneBusAwayApiMethod<TransitListEntryWit
         
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
         
         Route route = transitIndexService.getAllRoutes().get(routeId);
         if(route == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown route.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown route.", apiVersion.getApiVersion());
 
         Collection<VehicleLocation> vehicles = vehicleLocationService.getForRoute(routeId);
         

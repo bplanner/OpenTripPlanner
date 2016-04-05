@@ -42,10 +42,10 @@ public class VehicleForTripMethod extends OneBusAwayApiMethod<TransitListEntryWi
     protected TransitResponse<TransitListEntryWithReferences<TransitVehicle>> getResponse() {
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
         
         if(ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED, apiVersion.getApiVersion());
         }
 
 		List<ServiceDate> serviceDates = new ArrayList<ServiceDate>();
@@ -56,14 +56,14 @@ public class VehicleForTripMethod extends OneBusAwayApiMethod<TransitListEntryWi
 				serviceDates.add(new ServiceDate());
 			}
 		} else if(dates.size() != ids.size()) {
-			return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "If dates are provided tripId and date parameter count must match.");
+			return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "If dates are provided tripId and date parameter count must match.", apiVersion.getApiVersion());
 		} else {
 			try {
 				for(String date : dates) {
 					serviceDates.add(ServiceDate.parseString(date));
 				}
 			} catch (ParseException e) {
-				return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse date.");
+				return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse date.", apiVersion.getApiVersion());
 			}
 		}
 
@@ -72,11 +72,11 @@ public class VehicleForTripMethod extends OneBusAwayApiMethod<TransitListEntryWi
 			ServiceDate serviceDate = serviceDates.remove(0);
 			Trip trip = getTrip(tripId, serviceDate);
 			if(trip == null) {
-				return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown trip.");
+				return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown trip.", apiVersion.getApiVersion());
 			}
 
             if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown trip.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown trip.", apiVersion.getApiVersion());
             }
 
 			TransitVehicle transitVehicle = getTransitVehicleForTrip(vehicleLocationService, tripId, serviceDate);

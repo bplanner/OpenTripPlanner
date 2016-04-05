@@ -37,6 +37,6 @@ public class ArrivalAndDepartureForStopMethod extends OneBusAwayApiMethod<Transi
 
     @Override
     protected TransitResponse<TransitEntryWithReferences<TransitArrivalAndDeparture>> getResponse() {
-        return TransitResponseBuilder.<TransitEntryWithReferences<TransitArrivalAndDeparture>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR);
+        return TransitResponseBuilder.<TransitEntryWithReferences<TransitArrivalAndDeparture>>getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, apiVersion.getApiVersion());
     }
 }

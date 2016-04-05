@@ -51,7 +51,7 @@ public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsA
         List<Stop> stops = queryStops();
 
         if(!initRequest())
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.", apiVersion.getApiVersion());
 
         List<TransitScheduleStopTime> stopTimes = new LinkedList<TransitScheduleStopTime>();
         Set<TransitTrip> trips = new HashSet<TransitTrip>();

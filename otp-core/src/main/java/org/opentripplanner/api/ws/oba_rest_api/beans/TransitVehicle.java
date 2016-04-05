@@ -19,14 +19,16 @@ public class TransitVehicle {
     private TransitCoordinatePoint location;
     private String serviceDate;
     private String licensePlate;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private String label;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    private String model;
     private boolean deviated;
     private long lastUpdateTime;
     private VehicleLocation.Status status;
     private VehicleLocation.CongestionLevel congestionLevel;
 	private TraverseMode vehicleRouteType;
 	private Integer stopDistancePercent;
-    private String vehicleModel;
 
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	private String busPhoneNumber;

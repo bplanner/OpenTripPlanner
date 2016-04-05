@@ -37,7 +37,7 @@ public class TripMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<T
         AgencyAndId tripId = parseAgencyAndId(tripIdString);
         Trip trip = getTrip(tripId, null);
         if(trip == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.", apiVersion.getApiVersion());
         }
         return responseBuilder.getResponseForTrip(trip);
     }

@@ -39,7 +39,7 @@ public class ShapeMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<
         AgencyAndId tripId = parseAgencyAndId(tripIdString);
         RouteVariant variant = transitIndexService.getVariantForTrip(tripId);
         if(variant == null) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "A RouteVariant was not found for the tripId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "A RouteVariant was not found for the tripId.", apiVersion.getApiVersion());
         }
         
         return responseBuilder.getResponseForLineString(variant.getGeometry());

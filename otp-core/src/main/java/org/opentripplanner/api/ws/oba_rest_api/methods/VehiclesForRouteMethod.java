@@ -42,10 +42,10 @@ public class VehiclesForRouteMethod extends OneBusAwayApiMethod<TransitListEntry
         
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
         
         if(ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED, apiVersion.getApiVersion());
         }
 
         SearchHintService searchHintService = graph.getService(SearchHintService.class);
@@ -63,7 +63,7 @@ public class VehiclesForRouteMethod extends OneBusAwayApiMethod<TransitListEntry
         for(AgencyAndId routeId : routeIds) {
             Route route = transitIndexService.getAllRoutes().get(routeId);
             if(route == null)
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown route.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown route.", apiVersion.getApiVersion());
             transitVehicles.addAll(getTransitVehiclesForRoute(vehicleLocationService, routeId));
         }
         

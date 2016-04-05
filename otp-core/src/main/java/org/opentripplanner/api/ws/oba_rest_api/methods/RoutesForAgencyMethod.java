@@ -38,7 +38,7 @@ public class RoutesForAgencyMethod extends OneBusAwayApiMethod<TransitListEntryW
     protected TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponse() {
         Agency agency = transitIndexService.getAgency(agencyId);
         if(agency == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, apiVersion.getApiVersion());
         
         List<Route> routesForAgency = new LinkedList<Route>();
         

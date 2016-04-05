@@ -43,10 +43,10 @@ public class VehiclesForAgencyMethod extends OneBusAwayApiMethod<TransitListEntr
         
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
         
         if(ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED, apiVersion.getApiVersion());
         }
                 
         Collection<VehicleLocation> vehicles = vehicleLocationService.getForAgency(agencyId);

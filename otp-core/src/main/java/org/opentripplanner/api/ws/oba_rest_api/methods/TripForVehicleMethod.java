@@ -43,21 +43,21 @@ public class TripForVehicleMethod extends OneBusAwayApiMethod<TransitEntryWithRe
         
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
         
         AgencyAndId vehicleId = parseAgencyAndId(vehicleIdString);
         VehicleLocation vehicleLocation = vehicleLocationService.getForVehicle(vehicleId);
         if(vehicleLocation == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Vehicle ID not found.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Vehicle ID not found.", apiVersion.getApiVersion());
 
         if(vehicleLocation.getTripId() == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Vehicle lacks a trip.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Vehicle lacks a trip.", apiVersion.getApiVersion());
         
         TransitTripDetails tripDetails = getTripDetails(vehicleLocation.getTripId(), vehicleLocation.getServiceDate(),
                 includeStatus, includeSchedule, includeTrip);
         
         if(tripDetails == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "Failed to create TripDetails...");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.UNKNOWN_ERROR, "Failed to create TripDetails...", apiVersion.getApiVersion());
         
         return responseBuilder.getResponseForTrip(tripDetails);
     }

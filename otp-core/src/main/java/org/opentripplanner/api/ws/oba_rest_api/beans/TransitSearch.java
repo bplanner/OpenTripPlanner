@@ -13,13 +13,18 @@
 
 package org.opentripplanner.api.ws.oba_rest_api.beans;
 
-import java.util.Collection;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
+
+import java.util.Collection;
 
 @Data
 public class TransitSearch {
     private String query;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private Collection<String> stopIds;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private Collection<String> routeIds;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private Collection<String> alertIds;
 }

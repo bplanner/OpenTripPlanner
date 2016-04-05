@@ -49,18 +49,18 @@ public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDe
                 AgencyAndId stopId = parseAgencyAndId(stopIdString);
                 Stop stop = transitIndexService.getAllStops().get(stopId);
                 if (stop == null) {
-                    return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.");
+                    return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
                 } else {
                     stops.add(stop);
                 }
             }
         } else {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
         }
 
         if(!initRequest()) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.",
-                    responseBuilder.entity(responseBuilder.getArrivalsAndDepartures(stops.get(0), null, null, null, null)));
+                    responseBuilder.entity(responseBuilder.getArrivalsAndDepartures(stops.get(0), null, null, null, null)), apiVersion.getApiVersion());
         }
 
         List<TransitScheduleStopTime> stopTimes = new LinkedList<TransitScheduleStopTime>();

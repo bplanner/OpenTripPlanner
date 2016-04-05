@@ -37,69 +37,78 @@ import java.util.Objects;
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "vehicles-for-location" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEntryWithReferences<TransitVehicle>> {
 
-    @QueryParam("query") private String query;
-    @QueryParam("lat") private Float lat;
-    @QueryParam("lon") private Float lon;
-    @QueryParam("latSpan") private Float latSpan;
-    @QueryParam("lonSpan") private Float lonSpan;
-    @QueryParam("radius") @DefaultValue("100") private int radius;
-    @QueryParam("ifModifiedSince") @DefaultValue("-1") long ifModifiedSince;
-    
+    @QueryParam("query")
+    private String query;
+    @QueryParam("lat")
+    private Float lat;
+    @QueryParam("lon")
+    private Float lon;
+    @QueryParam("latSpan")
+    private Float latSpan;
+    @QueryParam("lonSpan")
+    private Float lonSpan;
+    @QueryParam("radius")
+    @DefaultValue("100")
+    private int radius;
+    @QueryParam("ifModifiedSince")
+    @DefaultValue("-1")
+    long ifModifiedSince;
+
     @Override
     protected TransitResponse<TransitListEntryWithReferences<TransitVehicle>> getResponse() {
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
-        if(vehicleLocationService == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
-        
-        if(ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED);
+        if (vehicleLocationService == null)
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
+
+        if (ifModifiedSince > 0 && ifModifiedSince >= vehicleLocationService.getLastUpdateTime()) {
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_MODIFIED, apiVersion.getApiVersion());
         }
 
         Collection<VehicleLocation> vehicles;
-        
-        if(lat != null && lon != null) {
+
+        if (lat != null && lon != null) {
             Coordinate center = new Coordinate(lon, lat);
             Envelope area;
-            
-            if(lonSpan != null && latSpan != null) {
+
+            if (lonSpan != null && latSpan != null) {
                 Coordinate c1 = new Coordinate(lon - lonSpan, lat - latSpan),
-                           c2 = new Coordinate(lon + lonSpan, lat + latSpan);
-                
+                        c2 = new Coordinate(lon + lonSpan, lat + latSpan);
+
                 area = new Envelope(c1, c2);
             } else {
                 area = new Envelope(center);
                 area.expandBy(radius);
             }
-            
+
             vehicles = vehicleLocationService.getForArea(area);
         } else {
-            vehicles = vehicleLocationService.getAll();            
+            vehicles = vehicleLocationService.getAll();
         }
 
         List<TransitVehicle> transitVehicles = new LinkedList<TransitVehicle>();
-        for(VehicleLocation vehicle : vehicles) {
-            if(!TextUtils.isEmpty(query)) {
+        for (VehicleLocation vehicle : vehicles) {
+            if (!TextUtils.isEmpty(query)) {
                 boolean idMatches = same(query, vehicle.getVehicleId().getId()),
                         licencePlateMatches = matches(3, vehicle.getLicensePlate()),
                         driverMatches = isInternalRequest() && matches(5, vehicle.getDriverName()),
                         phoneMatches = isInternalRequest() && same(query, vehicle.getBusPhoneNumber()),
                         blockMatches = isInternalRequest() && same(query, vehicle.getBlockId()),
                         modelMatches = matches(5, vehicle.getVehicleModel());
-                if(!(idMatches || licencePlateMatches || driverMatches || phoneMatches || blockMatches || modelMatches))
+                if (!(idMatches || licencePlateMatches || driverMatches || phoneMatches || blockMatches || modelMatches))
                     continue;
             }
 
-            if(vehicle.getTripId() != null) {
+            if (vehicle.getTripId() != null) {
                 Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
-                if(isInternalRequest() || !GtfsLibrary.isAgencyInternal(trip)) {
+                if (isInternalRequest() || !GtfsLibrary.isAgencyInternal(trip)) {
                     TransitTrip transitTrip = getTransitTrip(vehicle, vehicle.getTripId(), vehicle.getServiceDate());
-                    if(transitTrip != null)
+                    if (transitTrip != null)
                         responseBuilder.addToReferences(transitTrip);
                 }
             }
             transitVehicles.add(responseBuilder.getVehicle(vehicle));
         }
-        
+
         return responseBuilder.getResponseForList(transitVehicles);
     }
 

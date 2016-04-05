@@ -46,7 +46,7 @@ public class ArrivalsAndDeparturesForStopMethod extends OneBusAwayApiMethod<Tran
         AgencyAndId stopId = parseAgencyAndId(stopIdString);
         Stop stop = transitIndexService.getAllStops().get(stopId);
         if(stop == null)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
         
         if(time == null)
             time = System.currentTimeMillis() / 1000;
@@ -56,7 +56,7 @@ public class ArrivalsAndDeparturesForStopMethod extends OneBusAwayApiMethod<Tran
         
         if(!graph.transitFeedCovers(startTime) && graph.transitFeedCovers(endTime)) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.",
-                    responseBuilder.entity(responseBuilder.getArrivalsAndDeparturesOBA(stop, null, null, null)));
+                    responseBuilder.entity(responseBuilder.getArrivalsAndDeparturesOBA(stop, null, null, null)), apiVersion.getApiVersion());
         }
         
         RoutingRequest options = makeTraverseOptions(startTime, routerId);

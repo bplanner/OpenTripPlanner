@@ -56,11 +56,11 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
             AgencyAndId vehicleId = parseAgencyAndId(vehicleIdString);
 
             if(vehicleLocationService == null)
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE);
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_VEHICLE_LOCATION_SERVICE, apiVersion.getApiVersion());
 
             VehicleLocation vehicle = vehicleLocationService.getForVehicle(vehicleId);
             if(vehicle == null)
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "A vehicle of the given id doesn't exist.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "A vehicle of the given id doesn't exist.", apiVersion.getApiVersion());
             
             serviceDate = vehicle.getServiceDate();
             tripId = vehicle.getTripId();
@@ -70,18 +70,18 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
                 try {
                     serviceDate = ServiceDate.parseString(date);
                 } catch (ParseException ex) {
-                    return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.");
+                    return TransitResponseBuilder.getFailResponse(TransitResponse.Status.INVALID_VALUE, "Failed to parse service date.", apiVersion.getApiVersion());
                 }
             }
 
             tripId = parseAgencyAndId(tripIdString);
             if(transitIndexService.getTripPatternForTrip(tripId, serviceDate) == null)
-                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.");
+                return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.", apiVersion.getApiVersion());
         }
             
         Trip trip = getTrip(tripId, serviceDate);
         if(!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown tripId.", apiVersion.getApiVersion());
         }
         
         CalendarService calendarService = graph.getCalendarService();
@@ -91,7 +91,7 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
         long endTime = serviceDate.next().getAsDate(graph.getTimeZone()).getTime() / 1000 - 1;
         
         if(!graph.transitFeedCovers(startTime) && graph.transitFeedCovers(endTime)) {
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.", apiVersion.getApiVersion());
         }
         
         RoutingRequest options = makeTraverseOptions(startTime, routerId);
@@ -100,13 +100,13 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
         
         TableTripPattern pattern = transitIndexService.getTripPatternForTrip(tripId, serviceDate);
         if(!serviceDay.serviceIdRunning(pattern.getServiceId()))
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip isn't in operation on the given service date.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip isn't in operation on the given service date.", apiVersion.getApiVersion());
         
         Timetable timetable = getTimetable(pattern, serviceDate);
 
         int tripIndex = timetable.getTripIndex(tripId);
         if(timetable.getTripTimes(tripIndex) instanceof CanceledTripTimes)
-            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip is canceled on the given service date.");
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip is canceled on the given service date.", apiVersion.getApiVersion());
         
         List<TransitStopTime> stopTimes = getStopTimesForTrip(tripId, serviceDate, pattern, timetable);
 

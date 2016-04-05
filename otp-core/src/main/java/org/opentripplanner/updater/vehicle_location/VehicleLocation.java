@@ -25,13 +25,13 @@ import org.onebusaway.gtfs.model.calendar.ServiceDate;
  */
 @ToString
 public class VehicleLocation {
-    
+
     public VehicleLocation(AgencyAndId routeId, Float lat, Float lon,
-            AgencyAndId tripId, Float bearing, Status status, AgencyAndId stopId, ServiceDate serviceDate) {
+                           AgencyAndId tripId, Float bearing, Status status, AgencyAndId stopId, ServiceDate serviceDate) {
         this(0l, null, routeId, lat, lon, tripId, null, null, bearing, status,
                 stopId, null, serviceDate, null, false, null, null, null, null, null, null);
     }
-    
+
     public VehicleLocation(long timestamp, AgencyAndId vehicleId, AgencyAndId routeId, Float lat, Float lon,
                            AgencyAndId tripId, String licensePlate, String label, Float bearing, Status status,
                            AgencyAndId stopId, Integer stopSequence, ServiceDate serviceDate, CongestionLevel congestionLevel, boolean deviated,
@@ -51,23 +51,23 @@ public class VehicleLocation {
         this.serviceDate = serviceDate;
         this.congestionLevel = congestionLevel;
         this.deviated = deviated;
-	    this.busPhoneNumber = busPhoneNumber;
-	    this.driverName = driverName;
-	    this.vehicleRouteType = vehicleRouteType;
-	    this.blockId = blockId;
-	    this.stopDistancePercent = stopDistancePercent;
+        this.busPhoneNumber = busPhoneNumber;
+        this.driverName = driverName;
+        this.vehicleRouteType = vehicleRouteType;
+        this.blockId = blockId;
+        this.stopDistancePercent = stopDistancePercent;
         this.vehicleModel = vehicleModel;
     }
-    
+
     public Coordinate getCoordinate() {
-        if(coordinate == null)
+        if (coordinate == null)
             coordinate = new Coordinate(longitude, latitude);
         return coordinate;
     }
-    
+
     @Getter
     private long timestamp;
-    
+
     @Getter
     private AgencyAndId vehicleId;
 
@@ -76,54 +76,61 @@ public class VehicleLocation {
 
     @Getter
     private Float longitude;
-    
+
     @Getter
     private Float bearing;
-    
-    @Getter @Setter
+
+    @Getter
+    @Setter
     private AgencyAndId routeId;
-    
-    @Getter @Setter
+
+    @Getter
+    @Setter
     private AgencyAndId tripId;
-    
+
     @Getter
     private String licensePlate;
-    
+
     @Getter
+    @Setter
     private String label;
-    
+
     @Getter
     private Status status;
-    
-    @Getter @Setter
+
+    @Getter
+    @Setter
     private AgencyAndId stopId;
-    
+
     @Getter
     private Integer stopSequence;
-    
+
     @Getter
     private ServiceDate serviceDate;
-    
+
     @Getter
     private CongestionLevel congestionLevel;
 
-	@Getter
-	private String busPhoneNumber;
+    @Getter
+    private String busPhoneNumber;
 
-	@Getter
-	private String driverName;
+    @Getter
+    private String driverName;
 
     @Getter
     private boolean deviated;
 
-	@Getter
-	private Integer vehicleRouteType;
+    @Getter
+    private Integer vehicleRouteType;
 
-	@Getter
-	private String blockId;
+    @Getter
+    private String blockId;
 
-	@Getter
-	private Integer stopDistancePercent;
+    @Getter
+    private Integer stopDistancePercent;
+
+    @Getter
+    private String vehicleModel;
 
     private Coordinate coordinate;
 
@@ -132,13 +139,9 @@ public class VehicleLocation {
         STOPPED_AT,
         IN_TRANSIT_TO
     }
-    
+
     public enum CongestionLevel {
         UNKNOWN,
         CONGESTION
     }
-
-    @Getter
-    private String vehicleModel;
-
 }
