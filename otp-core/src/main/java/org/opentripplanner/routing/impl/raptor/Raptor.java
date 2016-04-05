@@ -193,11 +193,11 @@ public class Raptor implements PathService {
 
                     ArrayList<RaptorState> toRemove = new ArrayList<RaptorState>();
                     for (RaptorState state : search.getTargetStates()) {
-                        if (state.nBoardings == 0 && (options.getMaxWalkDistance() > initialWalk
-                                                     || (walkingOnlyState != null && walkingOnlyState != state))) {
+                        if (state.nBoardings == 0 && (walkingOnlyState != null || options.getMaxWalkDistance() > initialWalk)) {
+                            if(walkingOnlyState == null || state.eDominates(walkingOnlyState)) {
+                                walkingOnlyState = state;
+                            }
                             toRemove.add(state);
-                        } else if(state.nBoardings == 0) {
-                            walkingOnlyState = state;
                         }
                     }
                     if (search.getTargetStates().size() > 0) {
@@ -276,6 +276,10 @@ public class Raptor implements PathService {
 
         collectRoutesUsed(data, options, targetStates);
 
+        if(walkingOnlyState != null && !targetStates.contains(walkingOnlyState) && dominatesAny(walkingOnlyState, targetStates)) {
+            targetStates.add(walkingOnlyState);
+        }
+
         if (targetStates.isEmpty()) {
             log.info("RAPTOR found no paths");
         }
@@ -299,6 +303,16 @@ public class Raptor implements PathService {
         }
 
         return paths;
+    }
+
+    private boolean dominatesAny(RaptorState walkingOnlyState, List<RaptorState> targetStates) {
+        for(RaptorState state : targetStates) {
+            if(walkingOnlyState.arrivalTime <= state.arrivalTime) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void collectRoutesUsed(RaptorData data, RoutingRequest options,
