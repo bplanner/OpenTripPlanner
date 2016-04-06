@@ -169,6 +169,9 @@ public class TimetableSnapshotSource {
                 case MODIFIED:
                     applied = handleModifiedTrip(tripUpdateList);
                     break;
+                case RESTORED:
+                    applied = handleRestoredTrip(tripUpdateList);
+                    break;
                 case REMOVED:
                     applied = handleRemovedTrip(tripUpdateList);
                     break;
@@ -329,6 +332,21 @@ public class TimetableSnapshotSource {
                 updatedTrip, tripUpdateList.getTimestamp(), tripUpdateList.getServiceDate(), tripUpdateList.getUpdates());
 
         return handleCanceledTrip(cancelingTripUpdateList) && handleAddedTrip(addingTripUpdateList);
+    }
+
+    protected boolean handleRestoredTrip(TripUpdateList tripUpdateList) {
+        if (!tripUpdateList.getUpdates().isEmpty()) {
+            throw new RuntimeException("RESTORED TripUpdate contains updates, skipping.");
+        }
+
+        TableTripPattern pattern = getPatternForTrip(tripUpdateList.getTripId(), tripUpdateList.getServiceDate());
+        if (pattern == null) {
+            LOG.info("Received modified update for non-existing trip (no pattern exists): {}", tripUpdateList.getTripId());
+            return false;
+        }
+
+        // we have a message we actually want to apply
+        return buffer.update(pattern, tripUpdateList);
     }
 
     protected boolean handleRemovedTrip(TripUpdateList tripUpdateList) {

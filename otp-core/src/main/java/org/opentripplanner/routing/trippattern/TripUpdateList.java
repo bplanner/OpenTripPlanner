@@ -83,6 +83,10 @@ public class TripUpdateList extends AbstractUpdate {
         return !updates.isEmpty() && updates.get(0).getStatus() == Update.Status.PLANNED;
     }
 
+    public boolean isRestore() {
+        return Status.RESTORED == status;
+    }
+
     public enum Status {
         /** This trip should be added to the graph, valid on the given serviceDate. */
         ADDED,
@@ -93,7 +97,9 @@ public class TripUpdateList extends AbstractUpdate {
         /** This trip should be modified for the given serviceDate. */
         UPDATED,
         /** This trip should be modified for the given serviceDate. */
-        MODIFIED
+        MODIFIED,
+        /** This trip should be restored with the schedule for the given serviceDate. */
+        RESTORED
     }
     
     public static TripUpdateList forCanceledTrip(AgencyAndId tripId, long timestamp, ServiceDate serviceDate) {
@@ -119,7 +125,11 @@ public class TripUpdateList extends AbstractUpdate {
 
         return new TripUpdateList(tripId, timestamp, serviceDate, Status.UPDATED, updates, null, wheelchairAccessible);
     }
-    
+
+    public static TripUpdateList forRestoredTrip(AgencyAndId tripId, long timestamp, ServiceDate serviceDate) {
+        return new TripUpdateList(tripId, timestamp, serviceDate, Status.RESTORED, Collections.<Update>emptyList(), null, null);
+    }
+
     public static TripUpdateList forModifiedTrip(AgencyAndId tripId, long timestamp, ServiceDate serviceDate, List<Update> updates, Integer wheelchairAccessible) {
         if(updates == null || updates.isEmpty())
             throw new IllegalArgumentException("At least one update needs to be supplied.");
@@ -496,9 +506,9 @@ public class TripUpdateList extends AbstractUpdate {
         }
 
         if(updates.isEmpty()) {
-            return null;
+            return TripUpdateList.forRestoredTrip(tripId, timestamp, serviceDate);
         }
-        
+
         Integer wheelchairAccessible = null;
         if(tripUpdate.hasVehicle()) {
 			GtfsRealtime.VehicleDescriptor vehicleDescriptor = tripUpdate.getVehicle();

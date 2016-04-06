@@ -379,7 +379,7 @@ public class Timetable implements Serializable {
             if (tripUpdate.isCancellation()) {
                 newTimes = new CanceledTripTimes(scheduledTimes);
             }
-            else if(tripUpdate.hasNoData()) {
+            else if(tripUpdate.hasNoData() || tripUpdate.isRestore()) {
                 newTimes = scheduledTimes;
             }
             else if(tripUpdate.hasDelay()) {
