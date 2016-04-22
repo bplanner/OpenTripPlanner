@@ -35,6 +35,7 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
@@ -179,6 +180,8 @@ public class OneBusAwayRequestLogger {
     @Slf4j
     private static class OBAGoogleAnalytics extends GoogleAnalytics {
 
+        private Random random = new Random();
+
         public OBAGoogleAnalytics(String trackingId) {
             super(createConfig(), trackingId);
 
@@ -202,12 +205,14 @@ public class OneBusAwayRequestLogger {
 
         @Override
         public Future<GoogleAnalyticsResponse> postAsync(GoogleAnalyticsRequest request) {
-            try {
-                return super.postAsync(request);
-            } catch (RejectedExecutionException exception) {
-                log.warn("Rejected google analytics request: {}", exception.getMessage());
-                return null;
+            if(random.nextInt(100) < 1) {
+                try {
+                    return super.postAsync(request);
+                } catch (RejectedExecutionException exception) {
+                    log.warn("Rejected google analytics request: {}", exception.getMessage());
+                }
             }
+            return null;
         }
 
         @Override
