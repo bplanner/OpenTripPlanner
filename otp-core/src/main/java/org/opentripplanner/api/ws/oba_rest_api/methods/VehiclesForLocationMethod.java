@@ -98,6 +98,7 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
                     continue;
             }
 
+            TransitVehicle transitVehicle = responseBuilder.getVehicle(vehicle);
             if (vehicle.getTripId() != null) {
                 Trip trip = getTrip(vehicle.getTripId(), vehicle.getServiceDate());
                 if (isInternalRequest() || !GtfsLibrary.isAgencyInternal(trip)) {
@@ -105,8 +106,9 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
                     if (transitTrip != null)
                         responseBuilder.addToReferences(transitTrip);
                 }
+                transitVehicle.setDelay(getDelayForVehicle(vehicle));
             }
-            transitVehicles.add(responseBuilder.getVehicle(vehicle));
+            transitVehicles.add(transitVehicle);
         }
 
         return responseBuilder.getResponseForList(transitVehicles);

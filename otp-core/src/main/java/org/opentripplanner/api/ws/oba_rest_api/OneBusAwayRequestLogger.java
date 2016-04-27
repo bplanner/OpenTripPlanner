@@ -210,6 +210,7 @@ public class OneBusAwayRequestLogger {
                     return super.postAsync(request);
                 } catch (RejectedExecutionException exception) {
                     log.warn("Rejected google analytics request: {}", exception.getMessage());
+                    return null;
                 }
             }
             return null;

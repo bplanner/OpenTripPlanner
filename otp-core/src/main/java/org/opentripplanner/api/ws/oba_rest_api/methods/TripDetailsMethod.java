@@ -25,6 +25,7 @@ import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
 import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.trippattern.CanceledTripTimes;
+import org.opentripplanner.routing.trippattern.TripTimes;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
@@ -74,13 +75,12 @@ public class TripDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefer
         TableTripPattern pattern = transitIndexService.getTripPatternForTrip(tripId, serviceDate);
         if(!serviceDay.serviceIdRunning(pattern.getServiceId()))
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip isn't operation on the given service date.", apiVersion.getApiVersion());
-        
-        Timetable timetable = getTimetable(pattern, serviceDate);
-        int tripIndex = timetable.getTripIndex(tripId);
-        if(timetable.getTripTimes(tripIndex) instanceof CanceledTripTimes)
+
+        TripTimes tripTimes = getTripTimesForTrip(tripId, serviceDate);
+        if(tripTimes instanceof CanceledTripTimes)
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip is canceled on the given service date.", apiVersion.getApiVersion());
-        
-        TransitTripDetails tripDetails = getTripDetails(trip, serviceDate, pattern, timetable,
+
+        TransitTripDetails tripDetails = getTripDetails(trip, serviceDate, pattern, tripTimes,
                 includeStatus, includeSchedule, includeTrip);
         
         return responseBuilder.getResponseForTrip(tripDetails);

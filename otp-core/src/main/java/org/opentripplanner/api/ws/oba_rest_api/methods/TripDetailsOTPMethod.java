@@ -28,9 +28,9 @@ import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
-import org.opentripplanner.routing.edgetype.Timetable;
 import org.opentripplanner.routing.transit_index.RouteVariant;
 import org.opentripplanner.routing.trippattern.CanceledTripTimes;
+import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.updater.vehicle_location.VehicleLocation;
 import org.opentripplanner.updater.vehicle_location.VehicleLocationService;
 
@@ -102,13 +102,11 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
         if(!serviceDay.serviceIdRunning(pattern.getServiceId()))
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip isn't in operation on the given service date.", apiVersion.getApiVersion());
         
-        Timetable timetable = getTimetable(pattern, serviceDate);
-
-        int tripIndex = timetable.getTripIndex(tripId);
-        if(timetable.getTripTimes(tripIndex) instanceof CanceledTripTimes)
+        TripTimes tripTimes = getTripTimesForTrip(tripId, serviceDate);
+        if(tripTimes instanceof CanceledTripTimes)
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_OPERATING, "Trip is canceled on the given service date.", apiVersion.getApiVersion());
         
-        List<TransitStopTime> stopTimes = getStopTimesForTrip(tripId, serviceDate, pattern, timetable);
+        List<TransitStopTime> stopTimes = getStopTimesForTrip(serviceDate, pattern, tripTimes);
 
 		if(!stopTimes.isEmpty()) {
 			TransitStopTime first = stopTimes.get(0);
@@ -129,12 +127,14 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
         VehicleLocationService vehicleLocationService = graph.getService(VehicleLocationService.class);
         if(vehicleLocationService != null) {
             VehicleLocation vehicle = vehicleLocationService.getForTrip(tripId);
-            if(vehicle != null && vehicle.getServiceDate().equals(serviceDate))
+            if(vehicle != null && vehicle.getServiceDate().equals(serviceDate)) {
                 transitVehicle = responseBuilder.getVehicle(vehicle);
+                transitVehicle.setDelay(getDelayForVehicle(vehicle));
+            }
         }
         
         TransitTrip transitTrip = responseBuilder.getTrip(trip);
-        transitTrip.setWheelchairAccessible(timetable.isWheelchairAccessible(tripIndex));
+        transitTrip.setWheelchairAccessible(tripTimes.isWheelchairAccessible());
         
         AgencyAndId routeId = trip.getRoute().getId();
         List<String> alertIds = getAlertsForTrip(tripId, routeId, options, startTime, endTime);

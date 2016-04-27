@@ -40,5 +40,11 @@ public class TransitVehicle {
 	private String blockId;
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    private String extBlockId;
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    private Integer delay;
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private String tripId;
 }

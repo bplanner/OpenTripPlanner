@@ -424,6 +424,7 @@ public class TransitResponseBuilder {
             transitVehicle.setBusPhoneNumber(vehicle.getBusPhoneNumber());
             transitVehicle.setDriverName(vehicle.getDriverName());
             transitVehicle.setBlockId(vehicle.getBlockId());
+            transitVehicle.setExtBlockId(vehicle.getExtBlockId());
         }
 
         if (vehicle.getRouteId() != null) {

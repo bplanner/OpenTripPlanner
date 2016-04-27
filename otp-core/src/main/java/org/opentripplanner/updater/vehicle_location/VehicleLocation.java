@@ -29,13 +29,13 @@ public class VehicleLocation {
     public VehicleLocation(AgencyAndId routeId, Float lat, Float lon,
                            AgencyAndId tripId, Float bearing, Status status, AgencyAndId stopId, ServiceDate serviceDate) {
         this(0l, null, routeId, lat, lon, tripId, null, null, bearing, status,
-                stopId, null, serviceDate, null, false, null, null, null, null, null, null);
+                stopId, null, serviceDate, null, false, null, null, null, null, null, null, null);
     }
 
     public VehicleLocation(long timestamp, AgencyAndId vehicleId, AgencyAndId routeId, Float lat, Float lon,
                            AgencyAndId tripId, String licensePlate, String label, Float bearing, Status status,
                            AgencyAndId stopId, Integer stopSequence, ServiceDate serviceDate, CongestionLevel congestionLevel, boolean deviated,
-                           String busPhoneNumber, String driverName, Integer vehicleRouteType, String blockId, Integer stopDistancePercent, String vehicleModel) {
+                           String busPhoneNumber, String driverName, Integer vehicleRouteType, String blockId, String extBlockId, Integer stopDistancePercent, String vehicleModel) {
         this.timestamp = timestamp;
         this.vehicleId = vehicleId;
         this.latitude = lat;
@@ -55,6 +55,7 @@ public class VehicleLocation {
         this.driverName = driverName;
         this.vehicleRouteType = vehicleRouteType;
         this.blockId = blockId;
+        this.extBlockId = extBlockId;
         this.stopDistancePercent = stopDistancePercent;
         this.vehicleModel = vehicleModel;
     }
@@ -125,6 +126,9 @@ public class VehicleLocation {
 
     @Getter
     private String blockId;
+
+    @Getter
+    private String extBlockId;
 
     @Getter
     private Integer stopDistancePercent;

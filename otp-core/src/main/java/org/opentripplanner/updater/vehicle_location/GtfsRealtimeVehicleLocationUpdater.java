@@ -205,9 +205,11 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
             }
 
             String blockId = null;
+            String extBlockId = null;
             GtfsRealtimeBplanner.BPTripDescriptor bpDescriptor = descriptor.getExtension(GtfsRealtimeBplanner.bpTrip);
-            if (bpDescriptor != null && bpDescriptor.hasBlockId()) {
+            if (bpDescriptor != null) {
                 blockId = bpDescriptor.getBlockId();
+                extBlockId = bpDescriptor.getExtBlockId();
             }
 
             Integer stopSequence = null;
@@ -294,7 +296,7 @@ public class GtfsRealtimeVehicleLocationUpdater extends PollingGraphUpdater {
 
             VehicleLocation vehicleLocation = new VehicleLocation(timestamp, vehicleId, routeId, lat, lon,
                     tripId, licensePlate, label, bearing, status, stopId, stopSequence, serviceDate, congestionLevel,
-                    deviated, busPhoneNumber, driverName, vehicleRouteType, blockId, stopDistancePercent, vehicleModel);
+                    deviated, busPhoneNumber, driverName, vehicleRouteType, blockId, extBlockId, stopDistancePercent, vehicleModel);
             ret.add(vehicleLocation);
         }
 

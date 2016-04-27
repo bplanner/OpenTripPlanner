@@ -13,6 +13,7 @@
 
 package org.opentripplanner.api.ws.oba_rest_api.methods;
 
+import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferences;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
@@ -52,10 +53,12 @@ public class VehiclesForAgencyMethod extends OneBusAwayApiMethod<TransitListEntr
         Collection<VehicleLocation> vehicles = vehicleLocationService.getForAgency(agencyId);
         List<TransitVehicle> transitVehicles = new LinkedList<TransitVehicle>();
         for(VehicleLocation vehicle : vehicles) {
+            TransitVehicle transitVehicle = responseBuilder.getVehicle(vehicle);
             if(vehicle.getTripId() != null) {
                 responseBuilder.addToReferences(getTrip(vehicle.getTripId(), vehicle.getServiceDate()));
+                transitVehicle.setDelay(getDelayForVehicle(vehicle));
             }
-            transitVehicles.add(responseBuilder.getVehicle(vehicle));
+            transitVehicles.add(transitVehicle);
         }
         
         return responseBuilder.getResponseForList(transitVehicles);
