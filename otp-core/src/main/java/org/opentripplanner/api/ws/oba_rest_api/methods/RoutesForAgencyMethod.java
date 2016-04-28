@@ -13,6 +13,8 @@
 
 package org.opentripplanner.api.ws.oba_rest_api.methods;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.Route;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferences;
@@ -32,22 +34,24 @@ import java.util.List;
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "routes-for-agency/{agencyId}" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class RoutesForAgencyMethod extends OneBusAwayApiMethod<TransitListEntryWithReferences<TransitRoute>> {
 
-    @PathParam("agencyId") private String agencyId;
-    
+    @Getter(AccessLevel.PROTECTED)
+    @PathParam("agencyId")
+    private String agencyId;
+
     @Override
     protected TransitResponse<TransitListEntryWithReferences<TransitRoute>> getResponse() {
-        Agency agency = transitIndexService.getAgency(agencyId);
-        if(agency == null)
+        if (getAgencyId() != null && transitIndexService.getAgency(getAgencyId()) == null) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, apiVersion.getApiVersion());
-        
+        }
+
         List<Route> routesForAgency = new LinkedList<Route>();
-        
-        for(Route route : transitIndexService.getAllRoutes().values()) {
-            if(route.getId().getAgencyId().equals(agencyId)) {
+
+        for (Route route : transitIndexService.getAllRoutes().values()) {
+            if (getAgencyId() == null || route.getId().getAgencyId().equals(getAgencyId())) {
                 routesForAgency.add(route);
             }
         }
-        
+
         return responseBuilder.getResponseForRoutes(routesForAgency);
     }
 }
