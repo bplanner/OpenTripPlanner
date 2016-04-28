@@ -34,14 +34,14 @@ import java.util.Set;
  */
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "arrivals-and-departures-for-stop" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDeparturesOTPMethod<TransitEntryWithReferences<TransitArrivalsAndDepartures>> {
-    
+
     @Override
     protected TransitResponse<TransitEntryWithReferences<TransitArrivalsAndDepartures>> getResponse() {
 
         boolean single;
         List<Stop> stops;
 
-        if(stopIdStrings != null && !stopIdStrings.isEmpty()) {
+        if (stopIdStrings != null && !stopIdStrings.isEmpty()) {
             stops = new LinkedList<Stop>();
             single = stopIdStrings.size() == 1;
 
@@ -58,9 +58,13 @@ public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDe
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown stopId.", apiVersion.getApiVersion());
         }
 
-        if(!initRequest()) {
+        if (!initRequest()) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.",
                     responseBuilder.entity(responseBuilder.getArrivalsAndDepartures(stops.get(0), null, null, null, null)), apiVersion.getApiVersion());
+        }
+
+        if (!parseRoutes()) {
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.", apiVersion.getApiVersion());
         }
 
         List<TransitScheduleStopTime> stopTimes = new LinkedList<TransitScheduleStopTime>();
@@ -72,8 +76,8 @@ public class ArrivalsAndDeparturesForStopOTPMethod extends AbstractArrivalsAndDe
 
         boolean limitExceeded = getResponse(stops, single, stopTimes, trips);
 
-        for(Stop stop : stops) {
-            if(single)
+        for (Stop stop : stops) {
+            if (single)
                 nearbyStopIds.addAll(getNearbyStops(stop));
 
             alertIds.addAll(getAlertsForStop(stop.getId(), options, startTime, endTime));

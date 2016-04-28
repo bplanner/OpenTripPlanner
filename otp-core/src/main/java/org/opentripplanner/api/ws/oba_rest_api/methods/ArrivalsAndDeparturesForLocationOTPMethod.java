@@ -41,17 +41,28 @@ import java.util.Set;
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "arrivals-and-departures-for-location" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsAndDeparturesOTPMethod<TransitListEntryWithReferences<TransitDepartureGroup>> {
 
-    @QueryParam("groupLimit") @DefaultValue("4") protected int groupLimit;
-    @QueryParam("clientLon") @DefaultValue("0") protected double clientLon;
-    @QueryParam("clientLat") @DefaultValue("0") protected double clientLat;
+    @QueryParam("groupLimit")
+    @DefaultValue("4")
+    protected int groupLimit;
+    @QueryParam("clientLon")
+    @DefaultValue("0")
+    protected double clientLon;
+    @QueryParam("clientLat")
+    @DefaultValue("0")
+    protected double clientLat;
 
     @Override
     protected TransitResponse<TransitListEntryWithReferences<TransitDepartureGroup>> getResponse() {
 
         List<Stop> stops = queryStops();
 
-        if(!initRequest())
+        if (!initRequest()) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NO_TRANSIT_TIMES, "Date is outside the dateset's validity.", apiVersion.getApiVersion());
+        }
+
+        if (!parseRoutes()) {
+            return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown routeId.", apiVersion.getApiVersion());
+        }
 
         List<TransitScheduleStopTime> stopTimes = new LinkedList<TransitScheduleStopTime>();
         Set<TransitTrip> trips = new HashSet<TransitTrip>();
@@ -59,16 +70,16 @@ public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsA
         boolean limitExceeded = getResponse(stops, false, stopTimes, trips);
 
         Map<String, TransitTrip> tripsById = new HashMap<String, TransitTrip>();
-        for(TransitTrip trip : trips)
+        for (TransitTrip trip : trips)
             tripsById.put(trip.getId(), trip);
 
         Map<String, TransitDepartureGroup> groups = new HashMap<String, TransitDepartureGroup>();
-        for(TransitScheduleStopTime stopTime : stopTimes) {
+        for (TransitScheduleStopTime stopTime : stopTimes) {
             TransitTrip trip = tripsById.get(stopTime.getTripId());
             String key = trip.getRouteId() + "-" + trip.getTripHeadsign();
 
             TransitDepartureGroup group = groups.get(key);
-            if(group == null) {
+            if (group == null) {
                 group = new TransitDepartureGroup();
                 group.setRouteId(trip.getRouteId());
                 group.setHeadsign(trip.getTripHeadsign());
@@ -78,13 +89,13 @@ public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsA
                     overrides = false;
             int containedIndex = -1;
 
-            for(int i = group.getStopTimes().size() - 1; i >= 0; i--) {
+            for (int i = group.getStopTimes().size() - 1; i >= 0; i--) {
                 TransitScheduleStopTime groupStopTime = group.getStopTimes().get(i);
                 if (groupStopTime.getTripId().equals(stopTime.getTripId())) {
                     TransitStop groupStop = responseBuilder.getReferences().getStops().get(stopTime.getStopId()),
                             stop = responseBuilder.getReferences().getStops().get(stopTime.getStopId());
                     double distA = SphericalDistanceLibrary.getInstance().fastDistance(clientLat, clientLon, groupStop.getLat(), groupStop.getLon()),
-                           distB = SphericalDistanceLibrary.getInstance().fastDistance(clientLat, clientLon, stop.getLat(), stop.getLon());
+                            distB = SphericalDistanceLibrary.getInstance().fastDistance(clientLat, clientLon, stop.getLat(), stop.getLon());
                     contains = true;
 
                     if (distA > distB) {
@@ -94,10 +105,9 @@ public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsA
                 }
             }
 
-            if(contains && overrides) {
+            if (contains && overrides) {
                 group.getStopTimes().set(containedIndex, stopTime);
-            }
-            else if(!contains && group.getStopTimes().size() < groupLimit) {
+            } else if (!contains && group.getStopTimes().size() < groupLimit) {
                 group.getStopTimes().add(stopTime);
                 responseBuilder.addToReferences(trip);
                 groups.put(key, group);
@@ -107,7 +117,7 @@ public class ArrivalsAndDeparturesForLocationOTPMethod extends AbstractArrivalsA
         List<TransitDepartureGroup> sortedGroups = new ArrayList<TransitDepartureGroup>(groups.values());
         Collections.sort(sortedGroups, new GroupSorter());
 
-        for(TransitDepartureGroup group : sortedGroups)
+        for (TransitDepartureGroup group : sortedGroups)
             Collections.sort(group.getStopTimes());
 
         return responseBuilder.getResponseForList(limitExceeded, sortedGroups);
