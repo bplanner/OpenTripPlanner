@@ -118,10 +118,6 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     }
 
     public State traverse(State state0, long arrivalTimeAtStop) {
-        return traverse(state0, arrivalTimeAtStop, 0, 0);
-    }
-
-    public State traverse(State state0, long arrivalTimeAtStop, long offsetTime, long tripOffset) {
         RoutingContext rctx = state0.getContext();
         RoutingRequest options = state0.getOptions();
         // this method is on State not RoutingRequest because we care whether the user is in
@@ -233,32 +229,24 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
             // possession of a rented bike.
             ServiceDay serviceDay = null;
             for (ServiceDay sd : rctx.serviceDays) {
-                long time;
                 int wait;
                 int secondsSinceMidnight = sd.secondsSinceMidnight(current_time);
                 if (sd.serviceIdRunning(serviceId)) {
                     // getNextTrip will find next or prev departure depending on final boolean parameter
-                    tripTimes = getPattern().getNextTrip(stopIndex, secondsSinceMidnight,
+                    tripTimes = getPattern().getNextTrip(stopIndex, secondsSinceMidnight, 
                             state0, sd, mode == TraverseMode.BICYCLE, boarding);
                     if (tripTimes != null) {
-                        time = boarding ? // we care about departures on board and arrivals on alight
-                            sd.time(tripTimes.getDepartureTime(stopIndex)):
-                            sd.time(tripTimes.getArrivalTime(stopIndex - 1));
                         wait = boarding ? // we care about departures on board and arrivals on alight
-                            (int)(time - current_time):
-                            (int)(current_time - time);
+                            (int)(sd.time(tripTimes.getDepartureTime(stopIndex)) - current_time):
+                            (int)(current_time - sd.time(tripTimes.getArrivalTime(stopIndex - 1)));
                         // a trip was found and the index is valid, so the wait should be non-negative
                         if (wait < 0)
                             LOG.error("negative wait time on board");
                         if (bestWait < 0 || wait < bestWait) {
-                            if(time != offsetTime || tripOffset == 0) {
-                                // track the soonest departure over all relevant schedules
-                                bestWait = wait;
-                                serviceDay = sd;
-                                bestTripTimes = tripTimes;
-                            } else {
-                                tripOffset--;
-                            }
+                            // track the soonest departure over all relevant schedules
+                            bestWait = wait;
+                            serviceDay = sd;
+                            bestTripTimes = tripTimes;
                         }
                     }
                 }

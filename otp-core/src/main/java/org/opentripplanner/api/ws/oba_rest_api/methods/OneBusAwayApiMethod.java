@@ -804,22 +804,14 @@ public abstract class OneBusAwayApiMethod<T> {
         State result;
         long time = options.isArriveBy() ? endTime : startTime;
         int stopIndex = tba.getStopIndex();
-        long prevTime;
-        int offset = 0;
 
         do {
             // TODO verify options/state correctness
             State s0 = new State(options.isArriveBy() ? tba.getToVertex() : tba.getFromVertex(), time, options);
-            result = tba.traverse(s0, 0, time, offset);
+            result = tba.traverse(s0);
             if (result == null)
                 break;
-
-            prevTime = time;
             time = result.getTimeSeconds();
-            if (time != prevTime) {
-                offset = 0;
-            }
-
             if (time > endTime || time < startTime || (limit > 0 && out.size() > limit))
                 break;
 
@@ -828,8 +820,8 @@ public abstract class OneBusAwayApiMethod<T> {
             TripTimes scheduledTripTimes = tripTimes.getScheduledTripTimes();
 
             Trip trip = result.getBackTrip();
-            if (!internalRequest && GtfsLibrary.isAgencyInternal(trip)) {
-                offset++;
+            if(!internalRequest && GtfsLibrary.isAgencyInternal(trip)) {
+                time += options.isArriveBy() ? -1 : +1; // move to the next board time
                 continue;
             }
 
@@ -843,9 +835,9 @@ public abstract class OneBusAwayApiMethod<T> {
             stopTime.setServiceDate(responseBuilder.getServiceDateAsString(result.getServiceDay().getServiceDate()));
 
             Set<Alert> alerts = result.getBackAlerts();
-            if (alerts != null && !alerts.isEmpty()) {
+            if(alerts != null && !alerts.isEmpty()) {
                 List<String> alertIds = new LinkedList<String>();
-                for (Alert alert : alerts) {
+                for(Alert alert : alerts) {
                     responseBuilder.addToReferences(alert);
                     alertIds.add(alert.alertId.toString());
                 }
@@ -853,21 +845,21 @@ public abstract class OneBusAwayApiMethod<T> {
             }
 
             if (tba.isBoarding()) {
-                if (!tripTimes.isScheduled())
+                if(!tripTimes.isScheduled())
                     stopTime.setPredictedDepartureTime(midnight + tripTimes.getDepartureTime(stopIndex));
-                if (scheduledTripTimes != null)
+                if(scheduledTripTimes != null)
                     stopTime.setDepartureTime(midnight + scheduledTripTimes.getDepartureTime(stopIndex));
             } else {
-                if (!tripTimes.isScheduled())
+                if(!tripTimes.isScheduled())
                     stopTime.setPredictedArrivalTime(midnight + tripTimes.getArrivalTime(stopIndex - 1));
-                if (scheduledTripTimes != null)
+                if(scheduledTripTimes != null)
                     stopTime.setArrivalTime(midnight + scheduledTripTimes.getArrivalTime(stopIndex - 1));
             }
             out.add(new T2<TransitScheduleStopTime, TransitTrip>(stopTime, transitTrip));
 
             responseBuilder.addToReferences(trip.getRoute());
 
-            offset++;
+            time += options.isArriveBy() ? -1 : +1; // move to the next board time
         } while (true);
 
         return out;
