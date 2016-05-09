@@ -820,7 +820,7 @@ public abstract class OneBusAwayApiMethod<T> {
             TripTimes scheduledTripTimes = tripTimes.getScheduledTripTimes();
 
             Trip trip = result.getBackTrip();
-            if(!internalRequest && GtfsLibrary.isAgencyInternal(trip)) {
+            if (!internalRequest && GtfsLibrary.isAgencyInternal(trip)) {
                 time += options.isArriveBy() ? -1 : +1; // move to the next board time
                 continue;
             }
@@ -835,9 +835,9 @@ public abstract class OneBusAwayApiMethod<T> {
             stopTime.setServiceDate(responseBuilder.getServiceDateAsString(result.getServiceDay().getServiceDate()));
 
             Set<Alert> alerts = result.getBackAlerts();
-            if(alerts != null && !alerts.isEmpty()) {
+            if (alerts != null && !alerts.isEmpty()) {
                 List<String> alertIds = new LinkedList<String>();
-                for(Alert alert : alerts) {
+                for (Alert alert : alerts) {
                     responseBuilder.addToReferences(alert);
                     alertIds.add(alert.alertId.toString());
                 }
@@ -845,14 +845,14 @@ public abstract class OneBusAwayApiMethod<T> {
             }
 
             if (tba.isBoarding()) {
-                if(!tripTimes.isScheduled())
+                if (!tripTimes.isScheduled())
                     stopTime.setPredictedDepartureTime(midnight + tripTimes.getDepartureTime(stopIndex));
-                if(scheduledTripTimes != null)
+                if (scheduledTripTimes != null)
                     stopTime.setDepartureTime(midnight + scheduledTripTimes.getDepartureTime(stopIndex));
             } else {
-                if(!tripTimes.isScheduled())
+                if (!tripTimes.isScheduled())
                     stopTime.setPredictedArrivalTime(midnight + tripTimes.getArrivalTime(stopIndex - 1));
-                if(scheduledTripTimes != null)
+                if (scheduledTripTimes != null)
                     stopTime.setArrivalTime(midnight + scheduledTripTimes.getArrivalTime(stopIndex - 1));
             }
             out.add(new T2<TransitScheduleStopTime, TransitTrip>(stopTime, transitTrip));
@@ -878,7 +878,7 @@ public abstract class OneBusAwayApiMethod<T> {
                 if (!isInternalRequest() && GtfsLibrary.isAgencyInternal(trip)) {
                     continue;
                 }
-                transitVehicle.setDelay(getDelayForVehicle(vehicle));
+                setDelayForVehicle(vehicle, transitVehicle);
                 transitTrip = getTransitTrip(vehicle, vehicle.getTripId(), vehicle.getServiceDate());
             }
 
@@ -910,7 +910,7 @@ public abstract class OneBusAwayApiMethod<T> {
             responseBuilder.addToReferences(transitTrip);
         }
 
-        transitVehicle.setDelay(getDelayForVehicle(vehicle));
+        setDelayForVehicle(vehicle, transitVehicle);
 
         return transitVehicle;
     }
@@ -938,33 +938,59 @@ public abstract class OneBusAwayApiMethod<T> {
         return null;
     }
 
-    protected Integer getDelayForVehicle(VehicleLocation vehicle) {
+    protected void setDelayForVehicle(VehicleLocation vehicle, TransitVehicle transitVehicle) {
         final AgencyAndId tripId = vehicle.getTripId();
         final ServiceDate serviceDate = vehicle.getServiceDate();
         final AgencyAndId stopId = vehicle.getStopId();
 
         if (!isInternalRequest() || tripId == null || stopId == null) {
-            return null;
+            return;
         }
 
         TableTripPattern tablePatternEdge = transitIndexService.getTripPatternForTrip(tripId, serviceDate);
         TripTimes tripTimes = getTripTimesForTrip(tripId, serviceDate);
         if (tablePatternEdge == null || tripTimes == null || tripTimes.isScheduled()) {
-            return null;
+            return;
         }
 
-        int hopIndex = getHopIndexForVehicle(tablePatternEdge, stopId);
-        return hopIndex < 0 ? tripTimes.getArrivalDelay(0) : tripTimes.getDepartureDelay(hopIndex);
+        TransitVehicle.DelayStatus status = TransitVehicle.DelayStatus.ON_TIME;
+        int stopIndex = getStopIndexForVehicle(tablePatternEdge, stopId);
+        if(stopIndex < 0) {
+            return;
+        }
+
+        int departureDelay = stopIndex == tripTimes.getNumHops() ? tripTimes.getArrivalDelay(stopIndex - 1) : tripTimes.getDepartureDelay(stopIndex);
+        long arrivalTime = stopIndex == 0 ? 0 : secondsAndServiceDateToEpochSeconds(tripTimes.getArrivalTime(stopIndex - 1), vehicle.getServiceDate());
+        long departureTime = stopIndex >= tripTimes.getNumHops() ? 0 : secondsAndServiceDateToEpochSeconds(tripTimes.getDepartureTime(stopIndex), vehicle.getServiceDate());
+        if (arrivalTime < vehicle.getTimestamp() && vehicle.getTimestamp() < departureTime && departureDelay == 0) {
+            departureDelay = (int) (departureTime - vehicle.getTimestamp());
+            status = TransitVehicle.DelayStatus.WAITING;
+        } else if (departureDelay <= -60) {
+            status = TransitVehicle.DelayStatus.EARLY;
+        } else if (departureDelay >= 60) {
+            status = TransitVehicle.DelayStatus.LATE;
+        }
+
+        transitVehicle.setDelay(String.format("%s%.1f", status.prefix, Math.round(((float) departureDelay) / 30f) / 2f));
+        transitVehicle.setDelayStatus(status);
     }
 
-    private int getHopIndexForVehicle(TableTripPattern tablePatternEdge, AgencyAndId stopId) {
+    private int getStopIndexForVehicle(TableTripPattern tablePatternEdge, AgencyAndId stopId) {
         List<Stop> stops = tablePatternEdge.getStops();
-        for(int i = 0; i < stops.size(); ++i) {
-            if(stops.get(i).getId().equals(stopId)) {
-                return i - 1;
+        for (int i = 0; i < stops.size(); ++i) {
+            if (stops.get(i).getId().equals(stopId)) {
+                return i;
             }
         }
         return -1;
+    }
+
+    private long secondsAndServiceDateToMilliseconds(int seconds, ServiceDate serviceDate) {
+        return serviceDate.getAsDate().getTime() + seconds * 1000;
+    }
+
+    private long secondsAndServiceDateToEpochSeconds(int seconds, ServiceDate serviceDate) {
+        return serviceDate.getAsDate().getTime() / 1000 + seconds;
     }
 
     protected TripTimes getTripTimesForTrip(AgencyAndId tripId, ServiceDate serviceDate) {

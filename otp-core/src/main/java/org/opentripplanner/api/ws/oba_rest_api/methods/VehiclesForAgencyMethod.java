@@ -56,7 +56,7 @@ public class VehiclesForAgencyMethod extends OneBusAwayApiMethod<TransitListEntr
             TransitVehicle transitVehicle = responseBuilder.getVehicle(vehicle);
             if(vehicle.getTripId() != null) {
                 responseBuilder.addToReferences(getTrip(vehicle.getTripId(), vehicle.getServiceDate()));
-                transitVehicle.setDelay(getDelayForVehicle(vehicle));
+                setDelayForVehicle(vehicle, transitVehicle);
             }
             transitVehicles.add(transitVehicle);
         }

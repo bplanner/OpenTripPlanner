@@ -106,7 +106,7 @@ public class VehiclesForLocationMethod extends OneBusAwayApiMethod<TransitListEn
                     if (transitTrip != null)
                         responseBuilder.addToReferences(transitTrip);
                 }
-                transitVehicle.setDelay(getDelayForVehicle(vehicle));
+                setDelayForVehicle(vehicle, transitVehicle);
             }
             transitVehicles.add(transitVehicle);
         }

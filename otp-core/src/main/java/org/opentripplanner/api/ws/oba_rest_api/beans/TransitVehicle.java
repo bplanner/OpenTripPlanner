@@ -43,8 +43,24 @@ public class TransitVehicle {
     private String extBlockId;
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    private Integer delay;
+    private String delay;
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    private DelayStatus delayStatus;
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private String tripId;
+
+    public enum DelayStatus {
+        WAITING("*"),
+        EARLY(" "),
+        ON_TIME(" "),
+        LATE("+");
+
+        public final String prefix;
+
+        DelayStatus(String prefix) {
+            this.prefix = prefix;
+        }
+    }
 }

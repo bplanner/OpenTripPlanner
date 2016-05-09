@@ -129,7 +129,7 @@ public class TripDetailsOTPMethod extends OneBusAwayApiMethod<TransitEntryWithRe
             VehicleLocation vehicle = vehicleLocationService.getForTrip(tripId);
             if(vehicle != null && vehicle.getServiceDate().equals(serviceDate)) {
                 transitVehicle = responseBuilder.getVehicle(vehicle);
-                transitVehicle.setDelay(getDelayForVehicle(vehicle));
+                setDelayForVehicle(vehicle, transitVehicle);
             }
         }
         
