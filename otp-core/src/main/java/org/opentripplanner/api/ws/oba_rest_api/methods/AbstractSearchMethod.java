@@ -87,7 +87,8 @@ public abstract class AbstractSearchMethod<T> extends OneBusAwayApiMethod<T> {
                 Collection<AgencyAndId> hintedRouteIds = searchHintService.getHintsForRoute(route.getId());
                 for(AgencyAndId hintedRouteId : hintedRouteIds) {
                     Route hintedRoute = transitIndexService.getAllRoutes().get(hintedRouteId);
-                    matchedRoutes.add(hintedRoute);
+                    if(isInternalRequest() || !GtfsLibrary.isAgencyInternal(hintedRoute))
+                        matchedRoutes.add(hintedRoute);
                 }
             }
         }

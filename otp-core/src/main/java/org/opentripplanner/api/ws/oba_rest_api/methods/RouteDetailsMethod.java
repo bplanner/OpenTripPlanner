@@ -83,8 +83,11 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
             Collection<AgencyAndId> relatedRouteIds = searchHintService.getHintsForRoute(routeId);
             for(AgencyAndId relatedRouteId : relatedRouteIds) {
                 if(!routeId.equals(relatedRouteId)) {
-                    //alertIds.addAll(getAlertsForRoute(relatedRouteId, options, startTime, endTime));
-                    relatedVariants.addAll(getReferenceVariantsForRoute(relatedRouteId));
+                    Route hintedRoute = transitIndexService.getAllRoutes().get(relatedRouteId);
+                    if(isInternalRequest() || !GtfsLibrary.isAgencyInternal(hintedRoute)) {
+                        //alertIds.addAll(getAlertsForRoute(relatedRouteId, options, startTime, endTime));
+                        relatedVariants.addAll(getReferenceVariantsForRoute(relatedRouteId));
+                    }
                 }
             }
 

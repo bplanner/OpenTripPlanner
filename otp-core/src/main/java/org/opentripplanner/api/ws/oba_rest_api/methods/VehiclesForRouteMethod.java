@@ -20,12 +20,14 @@ import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferen
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitVehicle;
+import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.updater.vehicle_location.VehicleLocationService;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,13 +58,21 @@ public class VehiclesForRouteMethod extends OneBusAwayApiMethod<TransitListEntry
             routeIds.add(routeId);
 
             if(related && searchHintService != null) {
-                routeIds.addAll(searchHintService.getHintsForRoute(routeId));
+                Collection<AgencyAndId> relatedRouteIds = searchHintService.getHintsForRoute(routeId);
+                for(AgencyAndId relatedRouteId : relatedRouteIds) {
+                    if(!routeId.equals(relatedRouteId)) {
+                        Route hintedRoute = transitIndexService.getAllRoutes().get(relatedRouteId);
+                        if(isInternalRequest() || !GtfsLibrary.isAgencyInternal(hintedRoute)) {
+                            routeIds.add(relatedRouteId);
+                        }
+                    }
+                }
             }
         }
 
         for(AgencyAndId routeId : routeIds) {
             Route route = transitIndexService.getAllRoutes().get(routeId);
-            if(route == null)
+            if(route == null || (!isInternalRequest() && GtfsLibrary.isAgencyInternal(route)))
                 return TransitResponseBuilder.getFailResponse(TransitResponse.Status.NOT_FOUND, "Unknown route.", apiVersion.getApiVersion());
             transitVehicles.addAll(getTransitVehiclesForRoute(vehicleLocationService, routeId));
         }
