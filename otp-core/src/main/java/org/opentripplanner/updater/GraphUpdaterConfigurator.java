@@ -13,6 +13,18 @@
 
 package org.opentripplanner.updater;
 
+import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.updater.alerts.GtfsRealtimeAlertsUpdater;
+import org.opentripplanner.updater.bike_rental.BikeRentalUpdater;
+import org.opentripplanner.updater.example.ExampleGraphUpdater;
+import org.opentripplanner.updater.example.ExamplePollingGraphUpdater;
+import org.opentripplanner.updater.stoptime.PollingStoptimeUpdater;
+import org.opentripplanner.updater.stoptime.WebsocketGtfsRealtimeUpdater;
+import org.opentripplanner.updater.ticketing.TicketingUpdater;
+import org.opentripplanner.updater.vehicle_location.GtfsRealtimeVehicleLocationUpdater;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -20,17 +32,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.updater.alerts.GtfsRealtimeAlertsUpdater;
-import org.opentripplanner.updater.vehicle_location.GtfsRealtimeVehicleLocationUpdater;
-import org.opentripplanner.updater.bike_rental.BikeRentalUpdater;
-import org.opentripplanner.updater.example.ExampleGraphUpdater;
-import org.opentripplanner.updater.example.ExamplePollingGraphUpdater;
-import org.opentripplanner.updater.stoptime.PollingStoptimeUpdater;
-import org.opentripplanner.updater.stoptime.WebsocketGtfsRealtimeUpdater;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Configure/decorate a graph upon loading through Preferences (Preference is the new Java API
@@ -123,6 +124,9 @@ public class GraphUpdaterConfigurator {
                         }
                         else if (type.equals("vehicle-locations")) {
                             updater = new GtfsRealtimeVehicleLocationUpdater();
+                        }
+                        else if (type.equals("ticketing")) {
+                            updater = new TicketingUpdater();
                         }
                         else if (type.equals("example-updater")) {
                             updater = new ExampleGraphUpdater();

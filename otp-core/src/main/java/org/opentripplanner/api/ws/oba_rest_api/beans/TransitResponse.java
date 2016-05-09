@@ -65,6 +65,7 @@ public class TransitResponse<T> {
         ERROR_NO_GRAPH("No graph loaded.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
         ERROR_VEHICLE_LOCATION_SERVICE("VehicleLocationService not found.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
         ERROR_BIKE_RENTAL_SERVICE("BikeRentalService not found.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+        ERROR_TICKETING_SERVICE("TicketingService not found.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
         ERROR_TRANSIT_INDEX_SERVICE("No transit index found.  Add TransitIndexBuilder to your graph builder configuration and rebuild your graph.",
                 HttpStatus.SC_INTERNAL_SERVER_ERROR);
         

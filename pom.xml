@@ -433,7 +433,7 @@
         <!-- Lombok provides annotation-driven field accessor methods -->
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
-        <version>0.11.8</version>
+        <version>0.12.0</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
