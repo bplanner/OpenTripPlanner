@@ -287,6 +287,9 @@ public abstract class TripTimes {
         if (options.wheelchairAccessible && !isWheelchairAccessible())
             return false;
 
+        if(getDepartureTime(stopIndex) == CANCELED || getArrivalTime(stopIndex - 1) == CANCELED)
+            return false;
+
         if (bicycle)
             if ((trip.getBikesAllowed() != 1) &&    // trip does not explicitly allow bikes and
                 (trip.getRoute().getBikesAllowed() != 1 // route does not explicitly allow bikes or

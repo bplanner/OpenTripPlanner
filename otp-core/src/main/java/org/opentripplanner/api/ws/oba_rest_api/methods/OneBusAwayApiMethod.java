@@ -922,7 +922,7 @@ public abstract class OneBusAwayApiMethod<T> {
         if (pattern != null && (internalRequest || !GtfsLibrary.isAgencyInternal(trip))) {
             TripTimes tripTimes = getTripTimesForTrip(tripId, serviceDate);
 
-            if (tripTimes != null) {
+            if (tripTimes != null && !(tripTimes instanceof CanceledTripTimes)) {
                 if (vehicleLocation.getStopId() != null) {
                     Stop vehicleStop = transitIndexService.getAllStops().get(vehicleLocation.getStopId());
                     responseBuilder.addToReferences(vehicleStop);
@@ -949,7 +949,7 @@ public abstract class OneBusAwayApiMethod<T> {
 
         TableTripPattern tablePatternEdge = transitIndexService.getTripPatternForTrip(tripId, serviceDate);
         TripTimes tripTimes = getTripTimesForTrip(tripId, serviceDate);
-        if (tablePatternEdge == null || tripTimes == null || tripTimes.isScheduled()) {
+        if (tablePatternEdge == null || tripTimes == null || tripTimes.isScheduled() || tripTimes instanceof CanceledTripTimes) {
             return;
         }
 
