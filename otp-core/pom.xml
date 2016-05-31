@@ -241,7 +241,7 @@
         </dependency>
         <dependency>
           <!-- OBA GTFS loader -->
-          <groupId>org.onebusaway</groupId>
+          <groupId>io.realcity</groupId>
           <artifactId>onebusaway-gtfs</artifactId>
         </dependency>
         <dependency>
