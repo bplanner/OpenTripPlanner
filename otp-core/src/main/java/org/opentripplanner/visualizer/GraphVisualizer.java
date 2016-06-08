@@ -608,10 +608,10 @@ public class GraphVisualizer extends JFrame implements VertexSelectionListener {
         });
         buttonPanel.add(zoomToLocationButton);
 
-        JButton zoomOutButton = new JButton("Zoom out");
+        JButton zoomOutButton = new JButton("Refresh");
         zoomOutButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                showGraph.zoomOut();
+                showGraph.buildSpatialIndex();
             }
         });
         buttonPanel.add(zoomOutButton);

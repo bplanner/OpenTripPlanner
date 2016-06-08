@@ -38,6 +38,9 @@ public class MaxWalkState extends State {
         if (isBikeRenting() != other.isBikeRenting()) {
             return false;
         }
+        if (boughtTicket() != other.boughtTicket()) {
+            return false;
+        }
 
         if (backEdge != other.getBackEdge() && ((backEdge instanceof PlainStreetEdge)
                 && (!((PlainStreetEdge) backEdge).getTurnRestrictions().isEmpty())))

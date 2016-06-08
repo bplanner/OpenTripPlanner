@@ -33,6 +33,7 @@ import org.opentripplanner.routing.impl.StreetVertexIndexServiceImpl;
 import org.opentripplanner.routing.services.TransitIndexService;
 import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
+import org.opentripplanner.routing.vertextype.TicketingLocationVertex;
 import org.opentripplanner.routing.vertextype.TransitStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +94,12 @@ public class NetworkLinkerLibrary {
      * @param v
      */
     public LinkRequest connectVertexToStreets(BikeRentalStationVertex v) {
+        LinkRequest request = new LinkRequest(this);
+        request.connectVertexToStreets(v);
+        return request;
+    }
+
+    public LinkRequest connectVertexToStreets(TicketingLocationVertex v) {
         LinkRequest request = new LinkRequest(this);
         request.connectVertexToStreets(v);
         return request;

@@ -22,7 +22,9 @@ import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.edgetype.PathwayEdge;
 import org.opentripplanner.routing.edgetype.PatternEdge;
 import org.opentripplanner.routing.edgetype.SimpleTransfer;
+import org.opentripplanner.routing.edgetype.StreetBikeRentalLink;
 import org.opentripplanner.routing.edgetype.StreetEdge;
+import org.opentripplanner.routing.edgetype.StreetTicketingLink;
 import org.opentripplanner.routing.edgetype.StreetTransitLink;
 import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
@@ -32,6 +34,7 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
+import org.opentripplanner.routing.vertextype.TicketingLocationVertex;
 import org.opentripplanner.routing.vertextype.TransitStationStop;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -327,8 +330,7 @@ public class ShowGraph extends PApplet implements MouseWheelListener {
         for (Edge de : (Iterable<Edge>) edgeIndex.query(modelBounds)) {
             if (de instanceof PatternEdge) {
                 visibleTransitEdges.add(de);
-            }
-            else if (de instanceof PathwayEdge || de instanceof StreetTransitLink || de instanceof SimpleTransfer) {
+            } else if (de instanceof PathwayEdge || de instanceof StreetTransitLink || de instanceof SimpleTransfer || de instanceof StreetTicketingLink || de instanceof StreetBikeRentalLink) {
                 visibleLinkEdges.add(de);
             }
             else if (de instanceof StreetEdge) {
@@ -549,7 +551,10 @@ public class ShowGraph extends PApplet implements MouseWheelListener {
                     }
                 } else if (v instanceof BikeRentalStationVertex) {
                     BikeRentalStationVertex iv = (BikeRentalStationVertex) v;
-					drawVertex(iv, 5);
+                    drawVertex(iv, 5);
+                } else if (v instanceof TicketingLocationVertex) {
+                    TicketingLocationVertex iv = (TicketingLocationVertex) v;
+                    drawVertex(iv, 5);
                 }
             }
             /* Draw highlighted edges in another color */

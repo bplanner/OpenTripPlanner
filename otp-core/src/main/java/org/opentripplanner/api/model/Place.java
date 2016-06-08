@@ -14,6 +14,7 @@
 package org.opentripplanner.api.model; 
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.opentripplanner.updater.ticketing.TicketingLocation;
 import org.opentripplanner.util.Constants;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -29,6 +30,8 @@ public class Place {
      * For transit stops, the name of the stop.  For points of interest, the name of the POI.
      */
     public String name = null;
+
+    public TicketingLocation ticketingLocation;
 
     /** 
      * The ID of the stop. This is often something that users don't care about.

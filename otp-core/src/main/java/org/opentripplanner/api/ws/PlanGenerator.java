@@ -13,13 +13,9 @@
 
 package org.opentripplanner.api.ws;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
-
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
@@ -39,17 +35,7 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.TraverseMode;
-import org.opentripplanner.routing.edgetype.AreaEdge;
-import org.opentripplanner.routing.edgetype.EdgeWithElevation;
-import org.opentripplanner.routing.edgetype.ElevatorAlightEdge;
-import org.opentripplanner.routing.edgetype.FreeEdge;
-import org.opentripplanner.routing.edgetype.OnboardEdge;
-import org.opentripplanner.routing.edgetype.PatternEdge;
-import org.opentripplanner.routing.edgetype.PatternInterlineDwell;
-import org.opentripplanner.routing.edgetype.PlainStreetEdge;
-import org.opentripplanner.routing.edgetype.StreetEdge;
-import org.opentripplanner.routing.edgetype.TransitUtils;
-import org.opentripplanner.routing.edgetype.TripPattern;
+import org.opentripplanner.routing.edgetype.*;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.error.TrivialPathException;
 import org.opentripplanner.routing.error.VertexNotFoundException;
@@ -66,6 +52,7 @@ import org.opentripplanner.routing.trippattern.TripTimes;
 import org.opentripplanner.routing.util.ElevationProfileSegment;
 import org.opentripplanner.routing.vertextype.ExitVertex;
 import org.opentripplanner.routing.vertextype.OnboardDepartVertex;
+import org.opentripplanner.routing.vertextype.TicketingLocationVertex;
 import org.opentripplanner.routing.vertextype.TransitVertex;
 import org.opentripplanner.util.PolylineEncoder;
 import org.slf4j.Logger;
@@ -74,10 +61,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
-import org.opentripplanner.routing.edgetype.PathwayEdge;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
 
 @Service @Scope("singleton")
 public class PlanGenerator {
@@ -651,6 +640,10 @@ public class PlanGenerator {
             }
         }
 
+        if(firstVertex instanceof TicketingLocationVertex) {
+            leg.from.ticketingLocation = ((TicketingLocationVertex) firstVertex).getLocation();
+        }
+
         if (lastVertex instanceof TransitVertex) {
             lastStop = ((TransitVertex) lastVertex).getStop();
             leg.to.stopId = lastStop.getId().toString();
@@ -662,6 +655,10 @@ public class PlanGenerator {
                 leg.to.stopIndex = ((OnboardEdge) lastEdge).getStopIndex() + 1;
                 leg.to.stopSequence = tripTimes.getStopSequence(leg.to.stopIndex);
             }
+        }
+
+        if(lastVertex instanceof TicketingLocationVertex) {
+            leg.to.ticketingLocation = ((TicketingLocationVertex) lastVertex).getLocation();
         }
 
         if (showIntermediateStops) {

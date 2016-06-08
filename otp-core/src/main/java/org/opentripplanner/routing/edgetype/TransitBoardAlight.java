@@ -128,7 +128,11 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
         // We are leaving transit iff the edge is a boarding and the search is arrive-by, 
         // or the edge is not a boarding and the search is not arrive-by.
         boolean offTransit = (boarding && options.isArriveBy()) || 
-                (!boarding && !options.isArriveBy()); 
+                (!boarding && !options.isArriveBy());
+
+        if(options.shouldBuyTickets && !state0.boughtTicket()) {
+            return null;
+        }
         
         if (offTransit) { 
             /* We are leaving transit, not as much to do. */

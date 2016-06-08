@@ -13,12 +13,6 @@
 
 package org.opentripplanner.routing.core;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
@@ -32,6 +26,12 @@ import org.opentripplanner.routing.pathparser.PathParser;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class is a wrapper around a new State that provides it with setter and increment methods,
@@ -379,6 +379,11 @@ public class StateEditor {
         } else {
             child.stateData.nonTransitMode = TraverseMode.WALK;
         }
+    }
+
+    public void setBoughtTicket(boolean boughtTicket) {
+        cloneStateDataAsNeeded();
+        child.stateData.boughtTicket = boughtTicket;
     }
 
     public void setPreviousStop(Stop previousStop) {

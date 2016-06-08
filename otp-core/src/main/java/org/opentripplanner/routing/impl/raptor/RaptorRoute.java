@@ -76,7 +76,7 @@ public class RaptorRoute implements Serializable {
         for (int i = 0; i < boards[stopNo].length; ++i) {
             TransitBoardAlight board = boards[stopNo][i];
 
-            State state = new State(board.getFromVertex(), arrivalTime, request);
+            State state = new State(board.getFromVertex(), arrivalTime, request, true);
             State result = board.traverse(state);
             if (result == null)
                 continue;

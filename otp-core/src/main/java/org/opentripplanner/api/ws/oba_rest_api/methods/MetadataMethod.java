@@ -14,16 +14,22 @@
 package org.opentripplanner.api.ws.oba_rest_api.methods;
 
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
+import org.onebusaway.gtfs.services.calendar.CalendarService;
 import org.opentripplanner.api.ws.GraphMetadata;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitEntryWithReferences;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitMetadata;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.updater.ticketing.TicketingLocation;
+import org.opentripplanner.updater.ticketing.TicketingService;
 
 import javax.ws.rs.Path;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements the <a href="http://developer.onebusaway.org/modules/onebusaway-application-modules/current/api/where/methods/current-time.html">current-time</a> OneBusAway API method. Also returns the validity of the currently
@@ -33,30 +39,32 @@ import java.util.Date;
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "{acme : metadata|current-time}" + OneBusAwayApiMethod.API_CONTENT_TYPE)
 public class MetadataMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<TransitMetadata>> {
 
+    private static final int DAY_TYPE_DAYS = 7;
+
     @Override
     protected TransitResponse<TransitEntryWithReferences<TransitMetadata>> getResponse() {
-        
+
         Date now = new Date();
-        
+
         Calendar start = Calendar.getInstance(graph.getTimeZone());
         start.setTimeInMillis(graph.getTransitServiceStarts() * 1000);
-        
+
         Calendar end = Calendar.getInstance(graph.getTimeZone());
         end.setTimeInMillis((graph.getTransitServiceEnds() - 1) * 1000);
-        
+
         TransitMetadata metadata = new TransitMetadata();
         metadata.setTime(now.getTime());
         metadata.setReadableTime(ISO8601Utils.format(now));
         metadata.setValidityStart(responseBuilder.getServiceDateAsString(new ServiceDate(start)));
         metadata.setValidityEnd(responseBuilder.getServiceDateAsString(new ServiceDate(end)));
         metadata.setInternalRequest(isInternalRequest());
-        
+
         GraphMetadata gm = getGraphMetadata();
         metadata.setLowerLeftLongitude(gm.getLowerLeftLongitude());
         metadata.setUpperRightLongitude(gm.getUpperRightLongitude());
         metadata.setLowerLeftLatitude(gm.getLowerLeftLatitude());
         metadata.setUpperRightLatitude(gm.getUpperRightLatitude());
-        
+
         metadata.setBoundingPolyLine(gm.getBoundingPolyLine());
 
         long time = System.currentTimeMillis() / 1000;
@@ -65,13 +73,42 @@ public class MetadataMethod extends OneBusAwayApiMethod<TransitEntryWithReferenc
 
         metadata.setFeedIds(graph.getFeedIds());
 
+        metadata.setDayTypes(collectDayTypes());
+
         return responseBuilder.getResponseForMetadata(metadata);
     }
 
+    private Map<String, String> collectDayTypes() {
+        Map<String, String> dayTypes = new HashMap<String, String>(DAY_TYPE_DAYS);
+        ServiceDate date = new ServiceDate();
+        for (int i = 0; i < DAY_TYPE_DAYS; ++i) {
+            String dayType = dayType(date);
+            if (dayType != null) {
+                dayTypes.put(date.getAsString(), dayType);
+            }
+            date = date.next();
+        }
+        return dayTypes;
+    }
+
+    private String dayType(ServiceDate serviceDate) {
+        TicketingService ticketingService = graph.getService(TicketingService.class);
+        CalendarService calendarService = graph.getCalendarService();
+
+        for (Map.Entry<TicketingLocation.DayOfWeek, AgencyAndId> entry : ticketingService.getServiceIds().entrySet()) {
+            if (calendarService.getServiceIdsOnDate(serviceDate).contains(entry.getValue())) {
+                return entry.getKey().name();
+            }
+        }
+
+        return null;
+    }
+
     private final String CACHE_GRAPH_METADATA = "graph-metadata";
+
     private GraphMetadata getGraphMetadata() {
         GraphMetadata metadata = cacheService.get(CACHE_GRAPH_METADATA, graph.hashCode());
-        if(metadata == null) {
+        if (metadata == null) {
             metadata = new GraphMetadata(graph);
             cacheService.put(CACHE_GRAPH_METADATA, graph.hashCode(), metadata);
         }

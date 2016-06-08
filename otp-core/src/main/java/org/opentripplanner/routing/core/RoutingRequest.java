@@ -339,6 +339,11 @@ public class RoutingRequest implements Cloneable, Serializable {
      */
     public boolean disableRemainingWeightHeuristic = false;
 
+    public boolean shouldBuyTickets = false;
+
+    public int ticketBuyingCost = 60;
+    public int ticketBuyingTime = 120;
+
     public boolean internalRequest = false;
 
     /**

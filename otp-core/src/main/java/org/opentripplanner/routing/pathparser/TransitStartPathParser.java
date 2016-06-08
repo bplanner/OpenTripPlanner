@@ -26,6 +26,7 @@ import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
 import org.opentripplanner.routing.vertextype.OffboardVertex;
 import org.opentripplanner.routing.vertextype.OnboardVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
+import org.opentripplanner.routing.vertextype.TicketingLocationVertex;
 
 import static org.opentripplanner.routing.automata.Nonterminal.*;
 
@@ -92,6 +93,8 @@ public class TransitStartPathParser extends PathParser {
         if (v instanceof OffboardVertex)
             return STATION;
         if (v instanceof BikeRentalStationVertex)
+            return StreetEdge.CLASS_OTHERPATH;
+        if (v instanceof TicketingLocationVertex)
             return StreetEdge.CLASS_OTHERPATH;
         else
             throw new RuntimeException("failed to tokenize path");

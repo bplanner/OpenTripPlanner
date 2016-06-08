@@ -110,10 +110,10 @@ public class TargetBound implements SearchTerminationStrategy, SkipTraverseResul
     public boolean shouldSearchContinue(Vertex origin, Vertex target, State current,
             ShortestPathTree spt, RoutingRequest traverseOptions) {
         final Vertex vertex = current.getVertex();
-        if (!current.isBikeRenting() && (vertex instanceof TransitStop || vertex instanceof TransitStopDepart || vertex instanceof TransitStopArrive)) {
+        if (!current.isBikeRenting() && (!options.shouldBuyTickets || current.boughtTicket()) && (vertex instanceof TransitStop || vertex instanceof TransitStopDepart || vertex instanceof TransitStopArrive)) {
             transitStopsVisited.add(current);
         }
-        if (!current.isBikeRenting() && vertex == realTarget) {
+        if (current.isFinal() && vertex == realTarget) {
             addBounder(current);
         }
         return true;

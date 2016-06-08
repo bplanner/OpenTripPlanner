@@ -13,35 +13,46 @@
 
 package org.opentripplanner.api.ws.oba_rest_api.methods;
 
-import org.opentripplanner.api.ws.oba_rest_api.beans.TransitListEntryWithReferences;
+import org.opentripplanner.api.ws.oba_rest_api.beans.TransitEntryWithReferences;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponse;
 import org.opentripplanner.api.ws.oba_rest_api.beans.TransitResponseBuilder;
+import org.opentripplanner.api.ws.oba_rest_api.beans.TransitTicketing;
 import org.opentripplanner.updater.ticketing.TicketingLocation;
+import org.opentripplanner.updater.ticketing.TicketingProduct;
 import org.opentripplanner.updater.ticketing.TicketingService;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import java.util.Date;
+import java.util.List;
 
 @Path(OneBusAwayApiMethod.API_BASE_PATH + "ticketing-locations" + OneBusAwayApiMethod.API_CONTENT_TYPE)
-public class TicketingMethod extends OneBusAwayApiMethod<TransitListEntryWithReferences<TicketingLocation>> {
+public class TicketingMethod extends OneBusAwayApiMethod<TransitEntryWithReferences<TransitTicketing>> {
 
     @QueryParam("ifModifiedSince")
     @DefaultValue("-1")
     long ifModifiedSince;
 
     @Override
-    protected TransitResponse<TransitListEntryWithReferences<TicketingLocation>> getResponse() {
+    protected TransitResponse<TransitEntryWithReferences<TransitTicketing>> getResponse() {
         TicketingService ticketingService = graph.getService(TicketingService.class);
         if (ticketingService == null) {
             return TransitResponseBuilder.getFailResponse(TransitResponse.Status.ERROR_TICKETING_SERVICE, "Missing ticketing service.", apiVersion.getApiVersion());
         }
 
+        List<TicketingLocation> locations;
+        List<TicketingProduct> products;
+
         if (ifModifiedSince > 0) {
-            return responseBuilder.getResponseForList(ticketingService.getLocationsNewerThan(new Date(ifModifiedSince)));
+            Date date = new Date(ifModifiedSince);
+            locations = ticketingService.getLocationsNewerThan(date);
+            products = ticketingService.getProductsNewerThan(date);
         } else {
-            return responseBuilder.getResponseForList(ticketingService.getAllLocations());
+            locations = ticketingService.getAllLocations();
+            products = ticketingService.getAllProducts();
         }
+
+        return responseBuilder.getResponseForTicketing(locations, products);
     }
 }

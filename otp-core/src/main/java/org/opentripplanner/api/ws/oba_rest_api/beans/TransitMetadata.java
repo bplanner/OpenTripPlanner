@@ -16,6 +16,7 @@ package org.opentripplanner.api.ws.oba_rest_api.beans;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class TransitMetadata {
@@ -30,4 +31,5 @@ public class TransitMetadata {
     private String boundingPolyLine;
     private List<String> alertIds;
     private List<String> feedIds;
+    private Map<String, String> dayTypes;
 }

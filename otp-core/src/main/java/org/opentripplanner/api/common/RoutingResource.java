@@ -269,6 +269,9 @@ public abstract class RoutingResource {
     @QueryParam("maxHours")
     protected List<Integer> maxHours;
 
+    @QueryParam("shouldBuyTickets")
+    protected List<Boolean> shouldBuyTickets;
+
     /*
      * somewhat ugly bug fix: the graphService is only needed here for fetching per-graph time zones. 
      * this should ideally be done when setting the routing context, but at present departure/
@@ -471,7 +474,9 @@ public abstract class RoutingResource {
             long worst_t = request.dateTime + seconds;
             request.setWorstTime(worst_t);            
         }
-        
+
+        request.setShouldBuyTickets(get(shouldBuyTickets, n, request.shouldBuyTickets));
+
         return request;
     }
 

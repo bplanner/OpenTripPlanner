@@ -38,6 +38,8 @@ import org.opentripplanner.routing.patch.Alert;
 import org.opentripplanner.routing.patch.TranslatedString;
 import org.opentripplanner.routing.services.TransitIndexService;
 import org.opentripplanner.routing.transit_index.RouteVariant;
+import org.opentripplanner.updater.ticketing.TicketingLocation;
+import org.opentripplanner.updater.ticketing.TicketingProduct;
 import org.opentripplanner.updater.vehicle_location.VehicleLocation;
 import org.opentripplanner.util.PolylineEncoder;
 
@@ -280,6 +282,10 @@ public class TransitResponseBuilder {
 
     public TransitResponse<TransitEntryWithReferences<Response>> getResponseForTripPlan(Response plan) {
         return getOkResponse(entity(plan));
+    }
+
+    public TransitResponse<TransitEntryWithReferences<TransitTicketing>> getResponseForTicketing(List<TicketingLocation> locations, List<TicketingProduct> products) {
+        return getOkResponse(entity(new TransitTicketing(locations, products)));
     }
 
     public TransitResponse<TransitEntryWithReferences<Response>> getResponseForErrorTripPlan(TransitResponse.Status status, Response plan) {

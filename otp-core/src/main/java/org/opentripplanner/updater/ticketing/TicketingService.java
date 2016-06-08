@@ -14,6 +14,7 @@
 package org.opentripplanner.updater.ticketing;
 
 import com.sun.org.apache.bcel.internal.util.Objects;
+import org.onebusaway.gtfs.model.AgencyAndId;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,10 +26,20 @@ import java.util.Set;
 
 public class TicketingService {
 
+    private final Map<TicketingLocation.DayOfWeek, AgencyAndId> serviceIds;
     private Map<String, TicketingLocation> ticketingLocationsById = new HashMap<String, TicketingLocation>();
+    private Map<String, TicketingProduct> ticketingProductsById = new HashMap<String, TicketingProduct>();
+
+    public TicketingService(Map<TicketingLocation.DayOfWeek, AgencyAndId> serviceIds) {
+        this.serviceIds = serviceIds;
+    }
 
     public List<TicketingLocation> getAllLocations() {
         return new ArrayList<TicketingLocation>(ticketingLocationsById.values());
+    }
+
+    public List<TicketingProduct> getAllProducts() {
+        return new ArrayList<TicketingProduct>(ticketingProductsById.values());
     }
 
     public List<TicketingLocation> getLocationsNewerThan(Date date) {
@@ -43,27 +54,43 @@ public class TicketingService {
         return modified;
     }
 
-    public void updateLocations(List<TicketingLocation> updatedLocations) {
-        Date now = new Date();
-        Set<String> missingLocations = new HashSet<String>();
-        Map<String, TicketingLocation> modifiedLocations = new HashMap<String, TicketingLocation>();
+    public List<TicketingProduct> getProductsNewerThan(Date date) {
+        List<TicketingProduct> modified = new ArrayList<TicketingProduct>();
 
-        for (TicketingLocation location : updatedLocations) {
-            String id = location.getId();
-            missingLocations.remove(id);
-            if (!ticketingLocationsById.containsKey(id) || !Objects.equals(ticketingLocationsById.get(id), location)) {
-                modifiedLocations.put(id, location);
+        for (TicketingProduct ticketingProduct : ticketingProductsById.values()) {
+            if (date.before(ticketingProduct.getLastModified())) {
+                modified.add(ticketingProduct);
             }
         }
 
-        for (String id : missingLocations) {
-            modifiedLocations.put(id, TicketingLocation.builder()
-                    .id(id)
-                    .lastModified(now)
-                    .visible(false)
-                    .build());
+        return modified;
+    }
+
+    public TicketingLocation addLocation(TicketingLocation location) {
+        String id = location.getId();
+        if (!ticketingLocationsById.containsKey(id) || !Objects.equals(ticketingLocationsById.get(id), location)) {
+            ticketingLocationsById.put(location.id, location);
+        }
+        return location;
+    }
+
+    public void removeLocation(TicketingLocation location) {
+        ticketingLocationsById.remove(location.id);
+    }
+
+    public void updateProducts(List<TicketingProduct> products) {
+        Set<String> existingIds = new HashSet<String>(ticketingProductsById.keySet());
+        for (TicketingProduct product : products) {
+            ticketingProductsById.put(product.id, product);
+            existingIds.remove(product.id);
         }
 
-        ticketingLocationsById.putAll(modifiedLocations);
+        for (String missingId : existingIds) {
+            ticketingProductsById.remove(missingId);
+        }
+    }
+
+    public Map<TicketingLocation.DayOfWeek, AgencyAndId> getServiceIds() {
+        return serviceIds;
     }
 }

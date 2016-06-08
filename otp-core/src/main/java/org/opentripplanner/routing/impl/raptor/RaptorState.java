@@ -13,10 +13,6 @@
 
 package org.opentripplanner.routing.impl.raptor;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
@@ -24,6 +20,10 @@ import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.trippattern.TripTimes;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /* RaptorStates are always at some transit stop;
  * they either got there via a walk, in which case walkPath != null, or
@@ -44,6 +44,7 @@ public class RaptorState implements Comparable<RaptorState>, Cloneable {
     public TripTimes tripTimes = null;
 
     boolean rentingBike;
+    boolean boughtTicket;
 
     public AgencyAndId tripId;
 
@@ -73,6 +74,7 @@ public class RaptorState implements Comparable<RaptorState>, Cloneable {
         this.weight = parent.weight;
         this.initialWaitTime = parent.initialWaitTime;
         this.rentingBike = parent.rentingBike;
+        this.boughtTicket = parent.boughtTicket;
     }
 
     public String toString() {
@@ -115,6 +117,8 @@ public class RaptorState implements Comparable<RaptorState>, Cloneable {
 
     public boolean eDominates(RaptorState other) {
         if (rentingBike != other.rentingBike)
+            return false;
+        if (boughtTicket != other.boughtTicket)
             return false;
         if (arriveBy) {
             return nBoardings <= other.nBoardings

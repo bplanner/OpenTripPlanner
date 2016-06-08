@@ -435,7 +435,7 @@ public class RaptorSearch {
             RaptorState boardState = new RaptorState(stayOn);
             //we need to subtract out the boardSlack that we are about to mistakenly pay
             boardState.weight = -options.getBoardSlack() - options.getAlightSlack();
-            boardState.nBoardings = boardState.nBoardings = nBoardings - 1;
+            boardState.nBoardings = nBoardings - 1;
             boardState.boardStop = route.stops[firstStop];
             boardState.boardStopSequence = firstStop;
 
@@ -509,7 +509,7 @@ public class RaptorSearch {
             MaxWalkState start = new MaxWalkState(options.rctx.origin, walkOptions);
             spt = dijkstra.getShortestPathTree(start);
             for (State state : spt.getAllStates()) {
-                if (!state.isBikeRenting() && !isWorstTimeExceeded(state, options) && (state.getVertex() instanceof TransitStop || state.getVertex() instanceof TransitStopArrive || state.getVertex() instanceof TransitStopDepart))
+                if (!state.isBikeRenting() && (!options.shouldBuyTickets || state.boughtTicket()) && !isWorstTimeExceeded(state, options) && (state.getVertex() instanceof TransitStop || state.getVertex() instanceof TransitStopArrive || state.getVertex() instanceof TransitStopDepart))
                     transitStopStates.add(state);
             }
             // also, compute an initial spt from the target so that we can find out what transit
@@ -585,6 +585,8 @@ public class RaptorSearch {
                 dijkstraState.setExtension("raptorParent", state);
                 dijkstraState.setOptions(walkOptions);
                 dijkstraState.incrementWeight(state.weight);
+                dijkstraState.setBoughtTicket(state.boughtTicket);
+                dijkstraState.setEverBoarded(state.nBoardings > 0);
                 MaxWalkState newState = (MaxWalkState) dijkstraState.makeState();
                 startPoints.add(newState);
             }
@@ -615,7 +617,7 @@ public class RaptorSearch {
             targetStates = spt.getStates(walkOptions.rctx.target);
         if (targetStates != null) {
             TARGET: for (State targetState : targetStates) {
-				if(targetState.isBikeRenting() || isWorstTimeExceeded(targetState, options)) {
+				if(!targetState.isFinal() || isWorstTimeExceeded(targetState, options)) {
 					continue TARGET;
 				}
                 RaptorState parent = (RaptorState) targetState.getExtension("raptorParent");
@@ -624,6 +626,7 @@ public class RaptorSearch {
                     state = new RaptorState(parent);
                     state.nBoardings = parent.nBoardings;
                     state.rentingBike = targetState.isBikeRenting();
+                    state.boughtTicket = targetState.boughtTicket();
                 } else {
                     state = new RaptorState(options);
                 }
@@ -718,6 +721,7 @@ public class RaptorSearch {
             newState.walkPath = state;
             newState.stop = stop;
             newState.rentingBike = state.isBikeRenting();
+            newState.boughtTicket = state.boughtTicket();
 
             for (RaptorState oldState : states) {
                 if (oldState.eDominates(newState)) {

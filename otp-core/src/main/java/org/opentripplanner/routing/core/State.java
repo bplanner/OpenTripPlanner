@@ -13,19 +13,15 @@
 
 package org.opentripplanner.routing.core;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Set;
-
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.routing.algorithm.NegativeWeightException;
 import org.opentripplanner.routing.automata.AutomatonState;
 import org.opentripplanner.routing.edgetype.OnboardEdge;
-import org.opentripplanner.routing.edgetype.TablePatternEdge;
 import org.opentripplanner.routing.edgetype.PlainStreetEdge;
 import org.opentripplanner.routing.edgetype.StreetEdge;
+import org.opentripplanner.routing.edgetype.TablePatternEdge;
 import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.Edge;
@@ -35,6 +31,10 @@ import org.opentripplanner.routing.pathparser.PathParser;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Set;
 
 public class State implements Cloneable {
     /* Data which is likely to change at most traversals */
@@ -97,7 +97,12 @@ public class State implements Cloneable {
         // Since you explicitly specify, the vertex, we don't set the backEdge.
         this(vertex, null, timeSeconds, options);
     }
-    
+
+    public State(Vertex vertex, long timeSeconds, RoutingRequest options, boolean boughtTicket) {
+        this(vertex, timeSeconds, options);
+        stateData.boughtTicket = boughtTicket;
+    }
+
     /**
      * Create an initial state, forcing vertex, back edge and time to the specified values. Useful for reusing 
      * a RoutingContext in TransitIndex, tests, etc.
@@ -115,6 +120,10 @@ public class State implements Cloneable {
         this.stateData.usingRentedBike = false;
         this.walkDistance = 0;
         this.time = timeSeconds * 1000;
+        if (options.shouldBuyTickets) {
+            // ArriveBy tickets start with the ticket already bought
+            this.stateData.boughtTicket = options.isArriveBy();
+        }
         if (options.rctx != null) {
             this.pathParserStates = new int[options.rctx.pathParsers.length];
             Arrays.fill(this.pathParserStates, AutomatonState.START);
@@ -251,11 +260,15 @@ public class State implements Cloneable {
         return stateData.usingRentedBike;
     }
 
+    public boolean boughtTicket() {
+        return stateData.boughtTicket;
+    }
+
     /**
      * @return True if the state at vertex can be the end of path.
      */
     public boolean isFinal() {
-        return !isBikeRenting();
+        return !isBikeRenting() && (!(getOptions().shouldBuyTickets && getOptions().arriveBy) || (!isEverBoarded()  || !boughtTicket()));
     }
 
     public Stop getPreviousStop() {
@@ -289,6 +302,8 @@ public class State implements Cloneable {
         }
         // Multi-state (bike rental) - no domination for different states
         if (isBikeRenting() != other.isBikeRenting())
+            return false;
+        if (boughtTicket() != other.boughtTicket())
             return false;
 
         if (backEdge != other.getBackEdge() && ((backEdge instanceof PlainStreetEdge)
@@ -659,6 +674,8 @@ public class State implements Cloneable {
 
                 if (orig.isBikeRenting() != orig.getBackState().isBikeRenting())
                     editor.setBikeRenting(!orig.isBikeRenting());
+                if (orig.boughtTicket() != orig.getBackState().boughtTicket())
+                    editor.setBoughtTicket(!orig.boughtTicket());
 
                 editor.setNumBoardings(getNumBoardings() - orig.getNumBoardings());
 

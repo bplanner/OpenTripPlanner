@@ -13,10 +13,19 @@
 
 package org.opentripplanner.updater.ticketing;
 
+import lombok.AllArgsConstructor;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.services.calendar.CalendarService;
+import org.opentripplanner.routing.edgetype.TicketBuyingEdge;
+import org.opentripplanner.routing.edgetype.loader.LinkRequest;
+import org.opentripplanner.routing.edgetype.loader.NetworkLinkerLibrary;
+import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.vertextype.TicketingLocationVertex;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.PollingGraphUpdater;
 import org.opentripplanner.util.HttpUtils;
 import org.slf4j.Logger;
@@ -25,55 +34,138 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
 import static org.opentripplanner.updater.bike_rental.GenericJSONBikeRentalDataSource.convertStreamToString;
-import static org.opentripplanner.updater.ticketing.TicketingLocation.mapIntListToEnumList;
 import static org.opentripplanner.updater.ticketing.TicketingLocation.mapIntToEnum;
 
 public class TicketingUpdater extends PollingGraphUpdater {
 
     private static final Logger log = LoggerFactory.getLogger(TicketingUpdater.class);
 
-    private String url;
+    private NetworkLinkerLibrary networkLinkerLibrary;
+    private GraphUpdaterManager updaterManager;
+    private TicketingService service;
     private Graph graph;
+
+    private String url;
+    private String defaultAgencyId;
     private HttpUtils httpUtils;
     private long timestamp;
 
+    private Map<TicketingLocation.DayOfWeek, AgencyAndId> serviceIdMap = new HashMap<TicketingLocation.DayOfWeek, AgencyAndId>();
+
+    private Map<TicketingLocation, TicketingLocationVertex> verticesByStation = new HashMap<TicketingLocation, TicketingLocationVertex>();
+
     @Override
-    protected void runPolling() throws Exception {
-        List<TicketingLocation> updatedLocations = getTicketingLocations();
-        if (updatedLocations == null)
-            return;
-
-        TicketingService ticketingService = graph.getService(TicketingService.class);
-        if (ticketingService == null) {
-            ticketingService = new TicketingService();
-            graph.putService(TicketingService.class, ticketingService);
-        }
-
-        ticketingService.updateLocations(updatedLocations);
+    public void setGraphUpdaterManager(GraphUpdaterManager updaterManager) {
+        this.updaterManager = updaterManager;
     }
 
-    private List<TicketingLocation> getTicketingLocations() throws Exception {
-        List<TicketingLocation> locations = new ArrayList<TicketingLocation>();
+    @Override
+    protected void runPolling() throws Exception {
         JsonNode rootNode = retrieveJson();
         if (rootNode == null) {
-            return null;
+            return;
         }
 
-        if (!rootNode.isArray()) {
-            throw new RuntimeException("Failed to parse ticketing response: not an array.");
+        List<TicketingLocation> updatedLocations = getTicketingLocations(rootNode);
+        List<TicketingProduct> updatedProducts = getTicketingProducts(rootNode);
+        if (updatedLocations == null || updatedProducts == null)
+            return;
+
+        // Create graph writer runnable to apply these locations to the graph
+        TicketingGraphWriterRunnable graphWriterRunnable = new TicketingGraphWriterRunnable(updatedLocations, updatedProducts);
+        updaterManager.execute(graphWriterRunnable);
+    }
+
+    @Override
+    protected void configurePolling(Graph graph, Preferences preferences) throws Exception {
+        String url = preferences.get("url", null);
+        if (url == null)
+            throw new IllegalArgumentException("Missing mandatory 'url' parameter");
+
+        this.defaultAgencyId = preferences.get("defaultAgencyId", null);
+        this.url = url;
+        this.graph = graph;
+
+        CalendarService calendarService = graph.getCalendarService();
+        for (TicketingLocation.DayOfWeek dayOfWeek : TicketingLocation.DayOfWeek.values()) {
+            AgencyAndId serviceId = new AgencyAndId(defaultAgencyId, "DAY_" + dayOfWeek.name());
+            if(calendarService.getServiceIds().contains(serviceId)) {
+                serviceIdMap.put(dayOfWeek, serviceId);
+            }
+        }
+    }
+
+    @Override
+    public void setup() throws InterruptedException, ExecutionException {
+        httpUtils = new HttpUtils();
+
+        // Creation of network linker library will not modify the graph
+        networkLinkerLibrary = new NetworkLinkerLibrary(graph,
+                Collections.<Class<?>, Object>emptyMap());
+
+        // Adding a bike rental station service needs a graph writer runnable
+        updaterManager.executeBlocking(new GraphWriterRunnable() {
+            @Override
+            public void run(Graph graph) {
+                service = graph.getService(TicketingService.class);
+                if (service == null) {
+                    service = new TicketingService(serviceIdMap);
+                    graph.putService(TicketingService.class, service);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void teardown() {
+        httpUtils.cleanup();
+    }
+
+    private List<TicketingLocation> getTicketingLocations(JsonNode rootNode) throws Exception {
+        List<TicketingLocation> locations = new ArrayList<TicketingLocation>();
+        if (!rootNode.isObject()) {
+            throw new RuntimeException("Failed to parse ticketing response: not an object.");
         }
 
-        Date lastModified = new Date();
-        for (int i = 0; i < rootNode.size(); ++i) {
-            locations.add(createTicketingLocationFromJson(rootNode.get(i), lastModified));
+        JsonNode locationsNode = rootNode.get("locations");
+        if (locationsNode == null || !locationsNode.isArray()) {
+            throw new RuntimeException("Failed to parse ticketing locations.");
+        }
+
+        for (int i = 0; i < locationsNode.size(); ++i) {
+            locations.add(createTicketingLocationFromJson(locationsNode.get(i)));
         }
 
         return locations;
+    }
+
+    private List<TicketingProduct> getTicketingProducts(JsonNode rootNode) throws Exception {
+        List<TicketingProduct> products = new ArrayList<TicketingProduct>();
+        if (!rootNode.isObject()) {
+            throw new RuntimeException("Failed to parse ticketing response: not an object.");
+        }
+
+        JsonNode productsNode = rootNode.get("products");
+        if (productsNode == null || !productsNode.isArray()) {
+            throw new RuntimeException("Failed to parse ticketing products.");
+        }
+
+        for (int i = 0; i < productsNode.size(); ++i) {
+            products.add(createTicketingProductFromJson(productsNode.get(i)));
+        }
+
+        return products;
     }
 
     private JsonNode retrieveJson() throws IOException {
@@ -100,11 +192,24 @@ public class TicketingUpdater extends PollingGraphUpdater {
         return null;
     }
 
-    private TicketingLocation createTicketingLocationFromJson(JsonNode node, Date lastModified) {
+    private TicketingProduct createTicketingProductFromJson(JsonNode node) {
+        return TicketingProduct.builder()
+                .id(node.get("id").getTextValue())
+                .visible(!node.has("visible") || node.get("visible").getBooleanValue())
+                .lastModified(new Date(node.get("modified").getLongValue() * 1000))
+                .name(node.get("name").asText())
+                .price(node.get("price").asText())
+                .url(node.get("url").asText())
+                .groupId(node.get("groupId").asText())
+                .groupName(node.get("groupName").asText())
+                .build();
+    }
+
+    private TicketingLocation createTicketingLocationFromJson(JsonNode node) {
         return TicketingLocation.builder()
-                .visible(true)
-                .id(String.valueOf(node.get("id").getIntValue()))
-                .lastModified(lastModified)
+                .id(node.get("id").getTextValue())
+                .visible(!node.has("visible") || node.get("visible").getBooleanValue())
+                .lastModified(new Date(node.get("modified").getLongValue() * 1000))
                 .type(mapIntToEnum(TicketingLocation.PlaceType.class, node.get("type_id").asInt()))
                 .state(mapIntToEnum(TicketingLocation.TicketingState.class, node.get("state").asInt()))
                 .place(node.get("place").getTextValue())
@@ -112,13 +217,13 @@ public class TicketingUpdater extends PollingGraphUpdater {
                 .description(node.get("description").getTextValue())
                 .operator(node.get("organization").getTextValue())
                 .lat(Double.parseDouble(node.get("lat").getTextValue()))
-                .lng(Double.parseDouble(node.get("lng").getTextValue()))
-                .cachAccepted(node.get("banknote").getIntValue() == 1)
+                .lon(Double.parseDouble(node.get("lng").getTextValue()))
+                .cashAccepted(node.get("banknote").getIntValue() == 1)
                 .creditCardsAccepted(node.get("creditcard").getIntValue() == 1)
                 .passIdCreation(node.get("credential").getIntValue() == 1)
                 .ticketPassExchange(node.get("reexchange").getIntValue() == 1)
                 .openingPeriods(createOpeningPeriods(node.get("opening").get("general")))
-                .products(mapIntListToEnumList(TicketingLocation.TicketProduct.class, toIntArray(node.get("products"))))
+                .products(toStringArray(node.get("products")))
                 .build();
     }
 
@@ -127,7 +232,20 @@ public class TicketingUpdater extends PollingGraphUpdater {
         for (int i = 0; i < node.size(); ++i) {
             values.add(createOpeningPeriod(node.get(i)));
         }
-        return values;
+
+        boolean isOpen247 = values.size() == 8;
+        for (int i = 0; i < values.size() && isOpen247; ++i) {
+            TicketingLocation.TicketingPeriod period = values.get(i);
+            isOpen247 = TicketingLocation.DayOfWeek.values()[i] == period.getDayOfWeek()
+                    && "00:00".equals(period.getOpens())
+                    && ("23:59".equals(period.getCloses()) || "24:00".equals(period.getCloses()));
+        }
+
+        if (isOpen247) {
+            return Collections.singletonList(TicketingLocation.TicketingPeriod.builder().dayOfWeek(TicketingLocation.DayOfWeek.O247).build());
+        } else {
+            return values;
+        }
     }
 
     private TicketingLocation.TicketingPeriod createOpeningPeriod(JsonNode node) {
@@ -138,39 +256,68 @@ public class TicketingUpdater extends PollingGraphUpdater {
                 .build();
     }
 
-    private List<Integer> toIntArray(JsonNode node) {
-        List<Integer> values = new ArrayList<Integer>(node.size());
+    private List<String> toStringArray(JsonNode node) {
+        List<String> values = new ArrayList<String>(node.size());
         for (int i = 0; i < node.size(); ++i) {
-            values.add(node.get(i).asInt());
+            values.add(node.get(i).asText());
         }
         return values;
     }
 
-    @Override
-    protected void configurePolling(Graph graph, Preferences preferences) throws Exception {
-        String url = preferences.get("url", null);
-        if (url == null)
-            throw new IllegalArgumentException("Missing mandatory 'url' parameter");
-
-        this.url = url;
-        this.graph = graph;
-    }
-
-    @Override
-    public void setGraphUpdaterManager(GraphUpdaterManager updaterManager) {
-    }
-
-    @Override
-    public void setup() throws Exception {
-        httpUtils = new HttpUtils();
-    }
-
-    @Override
-    public void teardown() {
-        httpUtils.cleanup();
-    }
-
     public String toString() {
         return "TicketingUpdaterService(" + url + ")";
+    }
+
+    @AllArgsConstructor
+    private class TicketingGraphWriterRunnable implements GraphWriterRunnable {
+
+        private List<TicketingLocation> locations;
+        private List<TicketingProduct> products;
+
+        @Override
+        public void run(Graph graph) {
+            Set<TicketingLocation> stationSet = new HashSet<TicketingLocation>();
+            for (TicketingLocation location : locations) {
+                location = service.addLocation(location);
+                if (!location.visible) {
+                    continue;
+                }
+
+                TicketingLocationVertex vertex = verticesByStation.get(location);
+                stationSet.add(location);
+
+                if (vertex == null) {
+                    vertex = new TicketingLocationVertex(graph, location);
+                    LinkRequest request = networkLinkerLibrary.connectVertexToStreets(vertex);
+                    for (Edge e : request.getEdgesAdded()) {
+                        graph.addTemporaryEdge(e);
+                    }
+                    verticesByStation.put(location, vertex);
+                    new TicketBuyingEdge(serviceIdMap, vertex, vertex);
+                } else {
+                    vertex.setLocation(location);
+                }
+            }
+
+            List<TicketingLocation> toRemove = new ArrayList<TicketingLocation>();
+            for (Map.Entry<TicketingLocation, TicketingLocationVertex> entry : verticesByStation.entrySet()) {
+                TicketingLocation station = entry.getKey();
+                if (stationSet.contains(station))
+                    continue;
+
+                TicketingLocationVertex vertex = entry.getValue();
+                if (graph.containsVertex(vertex)) {
+                    graph.removeVertexAndEdges(vertex);
+                }
+                toRemove.add(station);
+            }
+
+            for (TicketingLocation station : toRemove) {
+                verticesByStation.remove(station);
+                //service.removeLocation(station);
+            }
+
+            service.updateProducts(products);
+        }
     }
 }
