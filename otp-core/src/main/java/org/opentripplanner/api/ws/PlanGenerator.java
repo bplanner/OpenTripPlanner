@@ -301,12 +301,12 @@ public class PlanGenerator {
 
             if (backMode == TraverseMode.LEG_SWITCH || forwardMode == TraverseMode.LEG_SWITCH) {
                 if (backMode != TraverseMode.LEG_SWITCH) {              // Start of leg switch
-                    legIndexPairs[1] = i;
+                    legIndexPairs[1] = edge instanceof StreetTransitLink && states[i].getBackEdge() instanceof StreetEdge ? i + 1 : i;
                 } else if (forwardMode != TraverseMode.LEG_SWITCH) {    // End of leg switch
                     if (legIndexPairs[1] != states.length - 1) {
                         legsIndexes.add(legIndexPairs);
                     }
-                    legIndexPairs = new int[] {i, states.length - 1};
+                    legIndexPairs = new int[] { states[i].getBackEdge() instanceof StreetTransitLink && edge instanceof StreetEdge ? i - 1 : i, states.length - 1};
                 }
             } else if (backMode != forwardMode) {                       // Mode change => leg switch
                 legIndexPairs[1] = i;
@@ -550,7 +550,7 @@ public class PlanGenerator {
             TraverseMode mode = state.getBackMode();
             Set<Alert> alerts = state.getBackAlerts();
 
-            if (mode != null) {
+            if (mode != null && mode != TraverseMode.LEG_SWITCH) {
                 leg.mode = mode.toString();
             }
 
@@ -721,10 +721,10 @@ public class PlanGenerator {
 
     /**
      * Converts a list of street edges to a list of turn-by-turn directions.
-     * 
+     *
+     * @param states
      * @param previous a non-transit leg that immediately precedes this one (bike-walking, say), or null
-     * 
-     * @param edges : A list of street edges
+     *
      * @return
      */
     private List<WalkStep> generateWalkSteps(State[] states, WalkStep previous) {
