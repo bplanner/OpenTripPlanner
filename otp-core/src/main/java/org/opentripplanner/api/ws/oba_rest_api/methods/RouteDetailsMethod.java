@@ -42,6 +42,7 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
     @QueryParam("routeId") private String id;
     @QueryParam("date") private String date;
     @QueryParam("related") @DefaultValue("false") private boolean related;
+    @QueryParam("operative") @DefaultValue("false") private boolean operative;
 
     @Override
     protected TransitResponse<TransitEntryWithReferences<TransitRouteDetails>> getResponse() {
@@ -75,7 +76,13 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
         
         Set<String> alertIds = new HashSet<String>(getAlertsForRoute(routeId, options, startTime, endTime));
         List<RouteVariant> routeVariants = new LinkedList<RouteVariant>(getReferenceVariantsForRoute(routeId));
+        List<RouteVariant> operativeVariants = null;
         List<RouteVariant> relatedVariants = null;
+
+        if(operative && isInternalRequest()) {
+            operativeVariants = getOperativeVariantsForRoute(routeId);
+            Collections.sort(operativeVariants, TransitResponseBuilder.ROUTE_VARIANT_COMPARATOR);
+        }
 
         SearchHintService searchHintService = graph.getService(SearchHintService.class);
         if(related && searchHintService != null) {
@@ -94,6 +101,6 @@ public class RouteDetailsMethod extends OneBusAwayApiMethod<TransitEntryWithRefe
             Collections.sort(relatedVariants, TransitResponseBuilder.ROUTE_VARIANT_COMPARATOR);
         }
 
-        return responseBuilder.getResponseForRoute(route, routeVariants, relatedVariants, new LinkedList<String>(alertIds));
+        return responseBuilder.getResponseForRoute(route, routeVariants, operativeVariants, relatedVariants, new LinkedList<String>(alertIds));
     }
 }

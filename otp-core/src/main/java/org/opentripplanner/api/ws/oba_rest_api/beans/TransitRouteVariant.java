@@ -27,4 +27,6 @@ public class TransitRouteVariant {
     private TransitPolyline polyline;
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private String routeId;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    private String type;
 }

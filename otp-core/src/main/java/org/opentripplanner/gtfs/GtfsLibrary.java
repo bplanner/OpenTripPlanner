@@ -214,6 +214,11 @@ public class GtfsLibrary {
         return !StringUtils.isEmpty(trip.getTripShortName());
     }
 
+    public static String getTripType(Trip trip) {
+        TripExtension tripExtension = trip.getExtension(TripExtension.class);
+        return tripExtension != null ? tripExtension.getBkkUtvtip() : null;
+    }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -230,5 +235,8 @@ public class GtfsLibrary {
 
         @CsvField(optional = true, name = "trips_bkk_utas")
         private String bkkUtas;
+
+        @CsvField(optional = true, name = "trips_bkk_utvtip")
+        private String bkkUtvtip;
     }
 }

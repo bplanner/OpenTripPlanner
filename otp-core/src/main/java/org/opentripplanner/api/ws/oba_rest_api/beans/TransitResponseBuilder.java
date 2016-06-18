@@ -204,8 +204,8 @@ public class TransitResponseBuilder {
         return getOkResponse(list(false, transitRoutes));
     }
 
-    public TransitResponse<TransitEntryWithReferences<TransitRouteDetails>> getResponseForRoute(Route route, List<RouteVariant> variants, List<RouteVariant> relatedVariants, List<String> alertIds) {
-        return getOkResponse(entity(getRoute(route, variants, relatedVariants, alertIds)));
+    public TransitResponse<TransitEntryWithReferences<TransitRouteDetails>> getResponseForRoute(Route route, List<RouteVariant> variants, List<RouteVariant> operativeVariants, List<RouteVariant> relatedVariants, List<String> alertIds) {
+        return getOkResponse(entity(getRoute(route, variants, operativeVariants, relatedVariants, alertIds)));
     }
 
     public TransitResponse<TransitEntryWithReferences<TransitStopsForRoute>> getResponseForStopsForRoute(Route route, List<RouteVariant> variants, List<String> alertIds,
@@ -558,7 +558,7 @@ public class TransitResponseBuilder {
     }
 
     //    private final String CACHE_ROUTE_DETAILS = "routeDetails";
-    public TransitRouteDetails getRoute(Route route, List<RouteVariant> variants, List<RouteVariant> relatedVariants, List<String> alertIds) {
+    public TransitRouteDetails getRoute(Route route, List<RouteVariant> variants, List<RouteVariant> operativeVariants, List<RouteVariant> relatedVariants, List<String> alertIds) {
         addToReferences(route);
 
 //        if(_cacheService.<Route, TransitRoute>containsKey(CACHE_ROUTE_DETAILS, route)) {
@@ -569,6 +569,31 @@ public class TransitResponseBuilder {
         for (RouteVariant variant : variants) {
             TransitRouteVariant transitVariant = getTransitVariant(variant);
             transitVariants.add(transitVariant);
+        }
+
+        if(operativeVariants != null) {
+            for (RouteVariant variant : operativeVariants) {
+                if(variant.getShapeNameTypePairingSet() != null && !variant.getShapeNameTypePairingSet().isEmpty()) {
+                    for (RouteVariant.ShapeNameTypePairing pairing : variant.getShapeNameTypePairingSet()) {
+                        final String bkkUtvtip = pairing.getBkkUtvtip();
+                        final String name = pairing.getName();
+                        final AgencyAndId shapeId = pairing.getShapeId();
+                        TransitRouteVariant transitVariant = getTransitVariant(variant);
+                        transitVariant.setType(bkkUtvtip != null ? bkkUtvtip : "");
+                        if(name != null) {
+                            transitVariant.setName(name);
+                        }
+                        if(shapeId != null) {
+                            // TODO: transitVariant.setPolyline();
+                        }
+                        transitVariants.add(transitVariant);
+                    }
+                } else {
+                    TransitRouteVariant transitVariant = getTransitVariant(variant);
+                    transitVariant.setType("");
+                    transitVariants.add(transitVariant);
+                }
+            }
         }
 
         if (relatedVariants != null) {

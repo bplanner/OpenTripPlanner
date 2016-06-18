@@ -1134,6 +1134,47 @@ public abstract class OneBusAwayApiMethod<T> {
         return options;
     }
 
+    protected final List<RouteVariant> getOperativeVariantsForRoute(AgencyAndId routeId) {
+        String CACHE_OPERATIVE_VARIANTS_FOR_ROUTE = "operativeVariantsForRoute-" + isInternalRequest();
+        List<RouteVariant> filteredVariants = cacheService.<AgencyAndId, List<RouteVariant>>get(CACHE_OPERATIVE_VARIANTS_FOR_ROUTE, routeId);
+        if (filteredVariants != null) {
+            return filteredVariants;
+        }
+
+        List<RouteVariant> routeVariants = transitIndexService.getVariantsForRoute(routeId);
+        Iterable<RouteVariant> nonReferenceVariants = Iterables.filter(routeVariants, new Predicate<RouteVariant>() {
+            @Override
+            public boolean apply(RouteVariant input) {
+                boolean reference = false;
+                for (TripsModelInfo tripsModelInfo : input.getTrips()) {
+                    reference |= tripsModelInfo.isRouteReference();
+                }
+                return !reference;
+            }
+        });
+
+        filteredVariants = Lists.newArrayList(nonReferenceVariants);
+        Iterable<RouteVariant> shapeReferenceTrips = Iterables.filter(routeVariants, new Predicate<RouteVariant>() {
+            @Override
+            public boolean apply(RouteVariant input) {
+                boolean reference = false;
+                for(TripsModelInfo tripsModelInfo : input.getTrips()) {
+                    reference |= tripsModelInfo.isShapeReference();
+                }
+                return reference;
+            }
+        });
+
+        for(RouteVariant routeVariant : shapeReferenceTrips) {
+
+        }
+
+        filteredVariants.addAll(Lists.newArrayList(shapeReferenceTrips));
+
+        cacheService.put(CACHE_OPERATIVE_VARIANTS_FOR_ROUTE, routeId, filteredVariants);
+        return filteredVariants;
+    }
+
     protected final List<RouteVariant> getReferenceVariantsForRoute(AgencyAndId routeId) {
         String CACHE_REFERENCE_VARIANTS_FOR_ROUTE = "referenceVariantsForRoute-" + isInternalRequest();
         List<RouteVariant> filteredVariants = cacheService.<AgencyAndId, List<RouteVariant>>get(CACHE_REFERENCE_VARIANTS_FOR_ROUTE, routeId);

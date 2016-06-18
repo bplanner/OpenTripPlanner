@@ -45,7 +45,7 @@ public class RouteDetailsForStopMethod extends OneBusAwayApiMethod<TransitListEn
         for(AgencyAndId routeId : responseBuilder.getRoutesForStop(stopId)) {
             Route route = transitIndexService.getAllRoutes().get(routeId);
             List<RouteVariant> routeVariants = getReferenceVariantsForRoute(routeId);
-            TransitRoute transitRoute = responseBuilder.getRoute(route, routeVariants, null, Collections.<String> emptyList()); // TODO: alerts?
+            TransitRoute transitRoute = responseBuilder.getRoute(route, routeVariants, null, null, Collections.<String> emptyList()); // TODO: alerts?
             routes.add(transitRoute);
         }
         

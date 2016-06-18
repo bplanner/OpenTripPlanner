@@ -18,7 +18,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
@@ -42,7 +46,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This represents a particular stop pattern on a particular route. For example, the N train has at least four different variants: express (over the
@@ -113,6 +119,9 @@ public class RouteVariant implements Serializable {
 
     private LineString geometry;
 
+    @JsonIgnore
+    private Set<ShapeNameTypePairing> shapeNameTypePairingSet;
+
     public RouteVariant() {
         // needed for JAXB but unused
         id = ++ID;
@@ -128,6 +137,7 @@ public class RouteVariant implements Serializable {
         exemplarSegments = new ArrayList<RouteSegment>();
         interlines = new ArrayList<PatternInterlineDwell>();
         this.mode = GtfsLibrary.getTraverseMode(route);
+        this.shapeNameTypePairingSet = new HashSet<ShapeNameTypePairing>();
     }
 
     public void addExemplarSegment(RouteSegment segment) {
@@ -299,9 +309,27 @@ public class RouteVariant implements Serializable {
                 direction = MULTIDIRECTION;
             }
         }
+
+        ShapeNameTypePairing pairing = new ShapeNameTypePairing(trip.getShapeId(), trip.getTripDescription(), GtfsLibrary.getTripType(trip));
+        if(!shapeNameTypePairingSet.contains(pairing)) {
+            shapeNameTypePairingSet.add(pairing);
+        }
     }
-    
+
+    public Set<ShapeNameTypePairing> getShapeNameTypePairingSet() {
+        return shapeNameTypePairingSet;
+    }
+
     public int getId() {
         return id;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ShapeNameTypePairing implements Serializable {
+        AgencyAndId shapeId;
+        String name;
+        String bkkUtvtip;
     }
 }
