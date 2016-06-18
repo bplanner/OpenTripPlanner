@@ -11,7 +11,7 @@ public class TransitStopStreetVertex extends IntersectionVertex {
     private String stopCode;
 
     public TransitStopStreetVertex(Graph g, String label, double x, double y, String name, String stopCode) {
-        super(g, label, x, y, name);
+        super(g, label + " (" + stopCode + ")", x, y, name);
         this.setStopCode(stopCode);
     }
 }

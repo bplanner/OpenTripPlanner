@@ -78,7 +78,7 @@ import java.util.*;
 
 /**
  * Builds a street graph from OpenStreetMap data.
- * 
+ *
  */
 enum Direction {
     LEFT, RIGHT, U, STRAIGHT;
@@ -107,7 +107,7 @@ class TurnRestrictionTag {
         this.type = type;
         this.direction = direction;
     }
-    
+
     @Override
     public String toString() {
         return String.format("%s turn restriction via node %d", direction, via);
@@ -142,7 +142,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
      */
     @Setter
     private CustomNamer customNamer;
-    
+
     /**
      * Ignore wheelchair accessibility information.
      */
@@ -171,6 +171,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
 
 	@Setter
 	private boolean staticBikeRentalReference = false;
+    private long maxNodeId = Integer.MIN_VALUE;
 
     public List<String> provides() {
         return Arrays.asList("streets", "turns");
@@ -196,7 +197,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
 
     /**
      * Set the way properties from a {@link WayPropertySetSource} source.
-     * 
+     *
      * @param source the way properties source
      */
     public void setDefaultWayPropertySetSource(WayPropertySetSource source) {
@@ -234,7 +235,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
         private static final double VISIBILITY_EPSILON = 0.000000001;
 
         private static final String nodeLabelFormat = "osm:node:%d";
-        
+
         private static final String levelnodeLabelFormat = nodeLabelFormat + ":level:%s";
 
         private Map<Long, OSMNode> _nodes = new HashMap<Long, OSMNode>();
@@ -277,10 +278,10 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
              * Why is there a boolean parameter called javaSucks? Because otherwise the two constructors have the same erasure, meaning that even
              * though Java has enough information at compile-time to figure out which constructor I am talking about, it intentionally throws this
              * away in the interest of having worse run-time performance. Thanks, Java!
-             * 
+             *
              * Oh, and most people would solve this problem by making a static factory method but that won't work because then all of this class's
              * outer classes would have to be static.
-             * 
+             *
              * @param osmNodes
              * @param javaSucks
              */
@@ -866,10 +867,10 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
          * to be done at runtime to account for the differences in bike safety preferences. Ted Chiang's "Story Of Your Life" describes how a very
          * similar problem in optics gives rise to Snell's Law. It is the second-best story about a law of physics that I know of (Chiang's
          * "Exhalation" is the first).
-         * 
+         *
          * Anyway, since we're not going to run an O(N^3) algorithm at runtime just to give people who don't understand Snell's Law weird paths that
          * they can complain about, this should be just fine.
-         * 
+         *
          * @param group
          */
         private void buildAreasForGroup(AreaGroup group) {
@@ -1343,7 +1344,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
         /**
          * Do an all-pairs shortest path search from a list of vertices over a specified set of edges, and retain only those edges which are actually
          * used in some shortest path.
-         * 
+         *
          * @param startingVertices
          * @param edges
          */
@@ -1898,6 +1899,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 }
                 getLevelsForWay(relation);
             } else if (!(relation.isTag("type", "restriction"))
+                    && !(relation.isTag("public_transport", "stop"))
                     && !(relation.isTag("type", "route") && relation.isTag("route", "road"))
                     && !(relation.isTag("type", "multipolygon") && isOsmEntityRoutable(relation))
                     && !(relation.isTag("type", "level_map"))) {
@@ -1957,6 +1959,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
          * After all relations, ways, and nodes are loaded, handle areas.
          */
         public void nodesLoaded() {
+            processPublicTransportRelations();
             processMultipolygonRelations();
             AREA: for (OSMWay way : _singleWayAreas) {
                 if (_processedAreas.contains(way)) {
@@ -1995,9 +1998,156 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
             }
         }
 
+        private void processPublicTransportRelations() {
+            for (OSMRelation relation : _relations.values()) {
+                if (!relation.isTag("public_transport", "stop")) {
+                    continue;
+                }
+
+                OSMNode stopNode = null;
+                OSMNode platformNode = null;
+                for (OSMRelationMember member : relation.getMembers()) {
+                    if (!"stop".equals(member.getRole()) || !"node".equals(member.getType())) {
+                        continue;
+                    }
+
+                    stopNode = _nodes.get(member.getRef());
+                }
+
+                for (OSMRelationMember member : relation.getMembers()) {
+                    String role = member.getRole();
+                    if (!role.equals("platform")) {
+                        continue;
+                    }
+
+                    if ("node".equals(member.getType()) && _nodes.containsKey(member.getRef())) {
+                        platformNode = findClosestPoint(_nodes.get(member.getRef()), stopNode, platformNode);
+                    } else if ("way".equals(member.getType()) && _ways.containsKey(member.getRef())) {
+                        platformNode = findClosestPoint(_ways.get(member.getRef()), stopNode, platformNode);
+                    } else if ("relation".equals(member.getType()) && _relations.containsKey(member.getRef())) {
+                        platformNode = findClosestPoint(_relations.get(member.getRef()), stopNode, platformNode);
+                    }
+                }
+
+                if (platformNode == null) {
+                    platformNode = stopNode;
+                }
+
+                if (platformNode != null) {
+                    platformNode.addTag("public_transport:bkk", "platform");
+                    platformNode.addTag("ref:bkv", relation.getTag("ref:bkv"));
+                    platformNode.addTag("ref:bkk", relation.getTag("ref:bkk"));
+                }
+            }
+        }
+
+        private OSMNode findClosestPoint(OSMNode newNode, OSMNode stopNode, OSMNode existingNode) {
+            if(newNode == null && existingNode == null) {
+                return  null;
+            }
+
+            if (newNode == null) {
+                return existingNode;
+            }
+
+            if (existingNode == null) {
+                return newNode;
+            }
+
+            if (stopNode == null) {
+                return existingNode;
+            }
+
+            double osmNodeDistance = distanceLibrary.fastDistance(newNode.getLat(), newNode.getLon(), stopNode.getLat(), stopNode.getLon());
+            double platformNodeDistance = distanceLibrary.fastDistance(existingNode.getLat(), existingNode.getLon(), stopNode.getLat(), stopNode.getLon());
+
+            return osmNodeDistance < platformNodeDistance ? newNode : existingNode;
+        }
+
+        private OSMNode findClosestPoint(OSMWay osmWay, OSMNode stopNode, OSMNode existingNode) {
+            OSMNode bestNode = null;
+            OSMNode prevNode = null;
+            OSMNode afterNode = null;
+            double bestDistance = Double.MAX_VALUE;
+            if(stopNode == null && existingNode != null) {
+                return existingNode;
+            }
+
+            // Find closest point on way -> insert fake node
+            for (Long nodeRef : osmWay.getNodeRefs()) {
+                OSMNode tempNode = _nodes.get(nodeRef);
+                if (tempNode == null) {
+                    continue;
+                }
+
+                if(stopNode == null) {
+                    return tempNode;
+                }
+
+                final double sx = stopNode.getLat();
+                final double sy = stopNode.getLon();
+                final double x1 = tempNode.getLat();
+                final double y1 = tempNode.getLon();
+                double xscale = Math.cos(sy * Math.PI / 180);
+                double tempDistance = distanceLibrary.fastDistance(x1, y1, sx, sy);
+
+                if (tempDistance < bestDistance) {
+                    bestDistance = tempDistance;
+                    bestNode = tempNode;
+                    afterNode = null;
+                }
+
+                if (prevNode != null) {
+                    final double x0 = prevNode.getLat();
+                    final double y0 = prevNode.getLon();
+                    double frac = GeometryUtils.segmentFraction(x0, y0, x1, y1, sx, sy, xscale);
+                    double x = x0 + frac * (x1 - x0);
+                    double y = y0 + frac * (y1 - y0);
+
+                    tempDistance = distanceLibrary.fastDistance(x, y, sx, sy);
+                    if (tempDistance < bestDistance) {
+                        OSMNode fakeNode = new OSMNode();
+                        fakeNode.setId(maxNodeId--);
+                        fakeNode.setLat(x);
+                        fakeNode.setLon(y);
+
+                        bestDistance = tempDistance;
+                        bestNode = fakeNode;
+                        afterNode = prevNode;
+                    }
+                }
+
+                prevNode = tempNode;
+            }
+
+            if (afterNode != null) {
+                osmWay.getNodeRefs().add(osmWay.getNodeRefs().indexOf(afterNode.getId()) + 1, bestNode.getId());
+                _nodes.put(bestNode.getId(), bestNode);
+                _nodesWithNeighbors.add(bestNode.getId());
+            }
+
+            return findClosestPoint(bestNode, stopNode, existingNode);
+        }
+
+        private OSMNode findClosestPoint(OSMRelation osmRelation, OSMNode stopNode, OSMNode existingNode) {
+            OSMNode tempNode = null;
+
+            for (OSMRelationMember member : osmRelation.getMembers()) {
+                if (!"way".equals(member.getType())) {
+                    continue;
+                }
+
+                if (_ways.containsKey(member.getRef())) {
+                    tempNode = findClosestPoint(_ways.get(member.getRef()), stopNode, tempNode);
+                }
+            }
+
+            return findClosestPoint(tempNode, stopNode, existingNode);
+        }
+
         /**
-         * Copies useful metadata from multipolygon relations to the relevant ways, or to the area 
-         * map. This is done at a different time than processRelations(), so that way purging 
+         * Copies useful metadata from multipolygon relations to the relevant ways, or to the area
+         * map. This is done at a different time than processRelations(), so that way purging
          * doesn't remove the used ways.
          */
         private void processMultipolygonRelations() {
@@ -2091,6 +2241,14 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 }
 
                 // multipolygons will be further processed in secondPhase()
+            }
+        }
+
+        private void processPublicTransportRelation(OSMRelation relation) {
+            for (OSMRelationMember member : relation.getMembers()) {
+                if("node".equals(member.getType())) {
+                    _nodesWithNeighbors.add(member.getRef());
+                }
             }
         }
 
@@ -2640,17 +2798,24 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
         }
 
         private boolean isTransitNode(OSMNode node) {
-            return /*"bus_stop".equals(node.getTag("highway"))
+            return "bus_stop".equals(node.getTag("highway"))
                     || "tram_stop".equals(node.getTag("railway"))
                     || "station".equals(node.getTag("railway"))
                     || "halt".equals(node.getTag("railway"))
-                    ||*/ "subway_entrance".equals(node.getTag("railway"))
-                    /*|| "bus_station".equals(node.getTag("amenity"))*/;
+                    || "subway_entrance".equals(node.getTag("railway"))
+                    || "subway_entrance".equals(node.getTag("public_transport:bkk"))
+                    || "platform".equals(node.getTag("public_transport:bkk"));
         }
 
         @Override
         public void doneRelations() {
-            // nothing to do here
+            LOG.debug("Processing relations...");
+
+            for (OSMRelation relation : _relations.values()) {
+                if (relation.isTag("public_transport", "stop")) {
+                    processPublicTransportRelation(relation);
+                }
+            }
         }
     }
 

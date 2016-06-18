@@ -44,9 +44,8 @@ public class TransitToTaggedStopsGraphBuilderImpl implements GraphBuilder {
         ArrayList<Vertex> vertices = new ArrayList<Vertex>();
         vertices.addAll(graph.getVertices());
 
+        int i = 0;
         for (TransitStop ts : IterableLibrary.filter(vertices, TransitStop.class)) {
-            if(!ts.isEntrance()) // TODO: only link entrances for now
-                continue;;
             // if the street is already linked there is no need to linked it again,
             // could happened if using the prune isolated island
             boolean alreadyLinked = false;
@@ -64,9 +63,13 @@ public class TransitToTaggedStopsGraphBuilderImpl implements GraphBuilder {
                 if (!connectVertexToStop(ts, wheelchairAccessible)) {
                     LOG.debug("Could not connect " + ts.toString());
                     //LOG.warn(graph.addBuilderAnnotation(new StopUnlinked(ts)));
+                } else {
+                    ++i;
                 }
             }
         }
+
+        LOG.info("Linked " + i + " transit stops to tagged bus stops.");
     }
 
     private boolean connectVertexToStop(TransitStop ts, boolean wheelchairAccessible) {

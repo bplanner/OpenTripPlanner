@@ -36,6 +36,7 @@ import org.opentripplanner.routing.vertextype.BikeRentalStationVertex;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 import org.opentripplanner.routing.vertextype.TicketingLocationVertex;
 import org.opentripplanner.routing.vertextype.TransitStationStop;
+import org.opentripplanner.routing.vertextype.TransitStopStreetVertex;
 import processing.core.PApplet;
 import processing.core.PFont;
 
@@ -546,7 +547,7 @@ public class ShowGraph extends PApplet implements MouseWheelListener {
                     drawVertex(v, 5);
                 } else if (v instanceof IntersectionVertex) {
                     IntersectionVertex iv = (IntersectionVertex) v;
-                    if (iv.isTrafficLight()) {
+                    if (iv.isTrafficLight() || v instanceof TransitStopStreetVertex) {
                         drawVertex(v, 7);
                     }
                 } else if (v instanceof BikeRentalStationVertex) {
